@@ -41,7 +41,7 @@ QUESTIONS_BASE = [
     # --- КАТЕГОРИЯ: Предметы и Рецепты ---
     {
         "category": "items",
-        "question": "Какой предмет даёт полный иммунитет к эффектам заклинаниям на время действия?",
+        "question": "Какой предмет даёт полный иммунитет к эффектам заклинаний на время действия?",
         "options": ["Black King Bar", "Linken's Sphere", "Lotus Orb", "Pipe of Insight"],
         "correct": "Black King Bar"
     },
@@ -197,28 +197,28 @@ QUESTIONS_BASE = [
     # --- КАТЕГОРИЯ: Угадай по картинке ---
     {
         "category": "photo",
-        "photo": "https://raw.githubusercontent.com/dotabuff/dota2-skills/master/images/pudge_meat_hook.png",
+        "photo": "https://wikidota.ru/images/thumb/7/7b/Meat_Hook_icon.png/120px-Meat_Hook_icon.png",
         "question": "Чья это иконка способности?",
         "options": ["Pudge (Meat Hook)", "Clockwerk (Hookshot)", "Vengeful Spirit", "Abaddon"],
         "correct": "Pudge (Meat Hook)"
     },
     {
         "category": "photo",
-        "photo": "https://raw.githubusercontent.com/dotabuff/dota2-skills/master/images/invoker_sun_strike.png",
+        "photo": "https://wikidota.ru/images/thumb/8/8e/Sun_Strike_icon.png/120px-Sun_Strike_icon.png",
         "question": "Как называется эта способность Invoker?",
         "options": ["Sun Strike", "Chaos Meteor", "EMP", "Deafening Blast"],
         "correct": "Sun Strike"
     },
     {
         "category": "photo",
-        "photo": "https://raw.githubusercontent.com/dotabuff/dota2-skills/master/images/enigma_black_hole.png",
+        "photo": "https://wikidota.ru/images/thumb/4/41/Black_Hole_icon.png/120px-Black_Hole_icon.png",
         "question": "Какая способность изображена на картинке?",
         "options": ["Black Hole", "Chronosphere", "Supernova", "Reverse Polarity"],
         "correct": "Black Hole"
     },
     {
         "category": "photo",
-        "photo": "https://raw.githubusercontent.com/dotabuff/dota2-skills/master/images/juggernaut_omnislash.png",
+        "photo": "https://wikidota.ru/images/thumb/a/a6/Omnislash_icon.png/120px-Omnislash_icon.png",
         "question": "Какой герой использует эту ультимативную способность?",
         "options": ["Juggernaut", "Sven", "Phantom Assassin", "Slayer"],
         "correct": "Juggernaut"
@@ -323,9 +323,9 @@ async def start_quiz_category(callback: types.CallbackQuery, state: FSMContext):
         await callback.message.delete()
     except Exception:
         pass
-    await send_next_question(callback.message, state)
+    await send_next_question(callback.message.chat.id, state)
 
-async def send_next_question(message: types.Message, state: FSMContext):
+async def send_next_question(chat_id: int, state: FSMContext, last_msg_id: int = None):
     data = await state.get_data()
     questions = data["questions"]
     index = data["current_index"]
@@ -343,12 +343,17 @@ async def send_next_question(message: types.Message, state: FSMContext):
                 correct_answers = correct_answers + ?, 
                 wrong_answers = wrong_answers + ?
             WHERE user_id = ?
-        """, (total, correct, wrong, message.chat.id))
+        """, (total, correct, wrong, chat_id))
         conn.commit()
         conn.close()
 
         text = f"🎉 **Викторина окончена!**\n\nПравильных ответов: {correct} из {total}\nПосмотри результаты в «🏆 Моя доска почёта»."
-        await message.answer(text, parse_mode="Markdown", reply_markup=main_menu())
+        if last_msg_id:
+            try:
+                await bot.delete_message(chat_id, last_msg_id)
+            except Exception:
+                pass
+        await bot.send_message(chat_id, text, parse_mode="Markdown", reply_markup=main_menu())
         await state.clear()
         return
 
@@ -357,16 +362,30 @@ async def send_next_question(message: types.Message, state: FSMContext):
     random.shuffle(options)
 
     kb = [[InlineKeyboardButton(text=opt, callback_data=f"ans_{opt}")] for opt in options]
-
     q_text = f"**Вопрос {index + 1} из {len(questions)}**\n\n{q['question']}"
 
+    # Если прошлый вопрос содержал фото, удаляем его, так как типы сообщений разнятся
+    if last_msg_id:
+        try:
+            await bot.delete_message(chat_id, last_msg_id)
+        except Exception:
+            pass
+
     if "photo" in q and q["photo"]:
-        await message.answer_photo(photo=q["photo"], caption=q_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+        try:
+            msg = await bot.send_photo(chat_id, photo=q["photo"], caption=q_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+        except Exception:
+            msg = await bot.send_message(chat_id, q_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     else:
-        await message.answer(q_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+        msg = await bot.send_message(chat_id, q_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+
+    await state.update_data(last_msg_id=msg.message_id)
 
 @dp.callback_query(F.data.startswith("ans_"), QuizStates.in_quiz)
 async def handle_answer(callback: types.CallbackQuery, state: FSMContext):
+    # Убираем анимированное вращение на кнопке без всплывающего окна
+    await callback.answer()
+
     user_ans = callback.data.replace("ans_", "")
     data = await state.get_data()
     questions = data["questions"]
@@ -374,26 +393,33 @@ async def handle_answer(callback: types.CallbackQuery, state: FSMContext):
     q = questions[index]
 
     if user_ans == q["correct"]:
-        await callback.answer("✅ Правильно!", show_alert=False)
+        feedback = "✅ **Правильно!**"
         correct_count = data["correct_count"] + 1
         wrong_count = data["wrong_count"]
     else:
-        await callback.answer(f"❌ Неверно! Правильный ответ: {q['correct']}", show_alert=True)
+        feedback = f"❌ **Неверно!**\nПравильный ответ: **{q['correct']}**"
         correct_count = data["correct_count"]
         wrong_count = data["wrong_count"] + 1
+
+    # Редактируем текущее сообщение: убираем клавиатуру и пишем результат
+    try:
+        if callback.message.caption:
+            await callback.message.edit_caption(caption=f"{callback.message.caption}\n\n{feedback}", parse_mode="Markdown", reply_markup=None)
+        else:
+            await callback.message.edit_text(text=f"{callback.message.text}\n\n{feedback}", parse_mode="Markdown", reply_markup=None)
+    except Exception:
+        pass
+
+    # Даём 1.5 секунды, чтобы прочитать результат
+    await asyncio.sleep(1.5)
 
     await state.update_data(
         current_index=index + 1,
         correct_count=correct_count,
         wrong_count=wrong_count
     )
-    
-    try:
-        await callback.message.delete()
-    except Exception:
-        pass
 
-    await send_next_question(callback.message, state)
+    await send_next_question(callback.message.chat.id, state, last_msg_id=callback.message.message_id)
 
 @dp.message(F.text == "🏆 Моя доска почёта")
 async def show_stats(message: types.Message):
