@@ -151,6 +151,42 @@ async def start_quiz(message: types.Message, state: FSMContext):
         for i, opt in enumerate(q["options"])
     ])
     await message.answer(f"Вопрос 1:\n{q['q']}", reply_markup=kb)
+@dp.callback_query(F.data.startswith("ans_"))
+async def handle_answer(callback: types.CallbackQuery, state: FSMContext):
+    parts = callback.data.split("_")
+    q_idx, ans_idx = int(parts[1]), int(parts[2])
+    q = QUESTIONS[q_idx]
+    
+    # 1. Проверяем правильность
+    is_correct = (ans_idx == q["correct"])
+    res_text = "✅ Правильно!" if is_correct else f"❌ Неверно. {q['desc']}"
+    
+    # 2. Обновляем статистику в базе SQLite
+    conn = sqlite3.connect("dotamozg.db")
+    cursor = conn.cursor()
+    if is_correct:
+        cursor.execute("UPDATE users SET total_questions = total_questions + 1, correct_answers = correct_answers + 1 WHERE user_id = ?", (callback.from_user.id,))
+    else:
+        cursor.execute("UPDATE users SET total_questions = total_questions + 1, wrong_answers = wrong_answers + 1 WHERE user_id = ?", (callback.from_user.id,))
+    conn.commit()
+    conn.close()
+
+    # 3. Редактируем сообщение с результатом текущего вопроса
+    await callback.message.edit_text(f"{q['q']}\n\nТвой ответ: {q['options'][ans_idx]}\n{res_text}")
+    await callback.answer()
+
+    # 4. Переход к следующему вопросу
+    next_q_idx = q_idx + 1
+    if next_q_idx < len(QUESTIONS):
+        next_q = QUESTIONS[next_q_idx]
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=opt, callback_data=f"ans_{next_q_idx}_{i}")] 
+            for i, opt in enumerate(next_q["options"])
+        ])
+        await callback.message.answer(f"Вопрос {next_q_idx + 1}:\n{next_q['q']}", reply_markup=kb)
+    else:
+        await state.clear()
+        await callback.message.answer("🎉 Викторина окончена! Посмотри свои результаты в меню «🏆 Моя доска почёта».", reply_markup=main_menu())
 async def main():
     await dp.start_polling(bot)
 
