@@ -17,12 +17,12 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 
-# Нейтральные HD-картинки для категорий
+# Надёжные прямодоступные изображения для категории
 BACKGROUND_IMAGES = {
-    "items": "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1000&auto=format&fit=crop",
-    "heroes": "https://cdn.pixabay.com/photo/2021/09/07/07/11/game-6603119_1280.jpg",
-    "lore": "https://cdn.pixabay.com/photo/2020/05/25/17/03/action-figure-5219531_1280.jpg",
-    "general": "https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=1000&auto=format&fit=crop"
+    "items": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800",
+    "heroes": "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=800",
+    "lore": "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=800",
+    "general": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800"
 }
 
 def init_db():
@@ -43,7 +43,7 @@ def init_db():
 
 init_db()
 
-# Расширенная база знаний (100+ вопросов)
+# База знаний (100+ вопросов)
 QUESTIONS_BASE = [
     # ==================== ПРЕДМЕТЫ (ITEMS) ====================
     {"category": "items", "question": "Какой предмет даёт полный иммунитет к магии на время действия?", "options": ["Black King Bar", "Linken's Sphere", "Lotus Orb", "Pipe of Insight"], "correct": "Black King Bar", "image": BACKGROUND_IMAGES["items"]},
@@ -57,7 +57,7 @@ QUESTIONS_BASE = [
     {"category": "items", "question": "Сколько секунд длится перезарядка Blink Dagger после получения урона от игрока?", "options": ["3 сек", "2 сек", "4 сек", "5 сек"], "correct": "3 сек", "image": BACKGROUND_IMAGES["items"]},
     {"category": "items", "question": "Какой предмет снижает перезарядку всех способностей и предметов на 25%?", "options": ["Octarine Core", "Refresher Orb", "Arcane Blink", "Kaya"], "correct": "Octarine Core", "image": BACKGROUND_IMAGES["items"]},
     {"category": "items", "question": "Какой предмет превращает вражеского юнита в безобидное существо (Hex)?", "options": ["Scythe of Vyse", "Eul's Scepter of Divinity", "Orchid Malevolence", "Nullifier"], "correct": "Scythe of Vyse", "image": BACKGROUND_IMAGES["items"]},
-    {"category": "items", "question": "Сколько стоит Sentry Ward в потайной лавке?", "options": ["50", "75", "100", "0"], "correct": "50", "image": BACKGROUND_IMAGES["items"]},
+    {"category": "items", "question": "Сколько стоит Sentry Ward в вардинг лавке?", "options": ["50", "75", "100", "0"], "correct": "50", "image": BACKGROUND_IMAGES["items"]},
     {"category": "items", "question": "Какова базовая стоимость Town Portal Scroll?", "options": ["100", "90", "75", "50"], "correct": "100", "image": BACKGROUND_IMAGES["items"]},
     {"category": "items", "question": "Какой артефакт дает вампиризм от заклинаний?", "options": ["Bloodstone", "Satanic", "Mask of Madness", "Vladmir's Offering"], "correct": "Bloodstone", "image": BACKGROUND_IMAGES["items"]},
     {"category": "items", "question": "Какой нейтральный предмет 5 тира увеличивает дальность атаки ближнего боя?", "options": ["Giant's Ring", "Apex", "Book of Shadows", "Stygian Desolator"], "correct": "Giant's Ring", "image": BACKGROUND_IMAGES["items"]},
@@ -89,9 +89,9 @@ QUESTIONS_BASE = [
     {"category": "heroes", "question": "Какой герой произносит знаменитую фразу 'Fresh meat!'?", "options": ["Pudge", "Lifestealer", "Doom", "Night Stalker"], "correct": "Pudge", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "Какой герой имеет наибольшую базовую дальность атаки в игре?", "options": ["Techies", "Sniper", "Lina", "Clinkz"], "correct": "Techies", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "Какое максимальное количество душ может набрать Shadow Fiend без Aghanim's Scepter?", "options": ["20", "15", "25", "30"], "correct": "20", "image": BACKGROUND_IMAGES["heroes"]},
-    {"category": "heroes", "question": "Какой герой имеет способность 'Global Silence'?", "options": ["Silencer", "Disruptor", "Darl Seer", "Oracle"], "correct": "Silencer", "image": BACKGROUND_IMAGES["heroes"]},
+    {"category": "heroes", "question": "Какой герой имеет способность 'Global Silence'?", "options": ["Silencer", "Disruptor", "Dark Seer", "Oracle"], "correct": "Silencer", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "Какова базовая скорость передвижения героя Enchantress?", "options": ["320", "335", "310", "300"], "correct": "320", "image": BACKGROUND_IMAGES["heroes"]},
-    {"category": "heroes", "question": "Какой герой может воскрешать союзника или себя способностью Reincarnation?", "options": ["Wraith King", "Dazzle", "Oracle", "Abaddon"], "correct": "Wraith King", "image": BACKGROUND_IMAGES["heroes"]},
+    {"category": "heroes", "question": "Какой герой может воскрешать себя способностью Reincarnation?", "options": ["Wraith King", "Dazzle", "Oracle", "Abaddon"], "correct": "Wraith King", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "Каким типом урона обладает способность Laguna Blade героя Lina без Aghanim's Scepter?", "options": ["Магический", "Чистый", "Физический", "Смешанный"], "correct": "Магический", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "Какой герой может перемещаться в любую точку карты к союзному юниту ультимейтом?", "options": ["Underlord", "Nature's Prophet", "Io", "Spectre"], "correct": "Underlord", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "У какого героя базовая броня равна -1?", "options": ["Visage", "Doom", "Phoenix", "Tiny"], "correct": "Visage", "image": BACKGROUND_IMAGES["heroes"]},
@@ -99,24 +99,22 @@ QUESTIONS_BASE = [
     {"category": "heroes", "question": "Сколько максимум иллюзий создает способность Phantasm героя Chaos Knight?", "options": ["3", "4", "2", "5"], "correct": "3", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "Какой герой может воровать интеллект при убийстве врагов?", "options": ["Silencer", "Outworld Destroyer", "Pugna", "Invoker"], "correct": "Silencer", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "Какой герой обладает способностью 'Chronosphere'?", "options": ["Faceless Void", "Weaver", "Enigma", "Void Spirit"], "correct": "Faceless Void", "image": BACKGROUND_IMAGES["heroes"]},
-    {"category": "heroes", "question": "Какая основная характеристика у героя Invoker после патча 7.33 (Универсальные герои)?", "options": ["Универсальный", "Интеллект", "Ловкость", "Сила"], "correct": "Универсальный", "image": BACKGROUND_IMAGES["heroes"]},
-    {"category": "heroes", "question": "Какой герой наносит урон ультимейтом в зависимости от недостающего здоровья врага?", "options": ["Necrophos", "Rearm", "Ancient Apparition", "Lion"], "correct": "Necrophos", "image": BACKGROUND_IMAGES["heroes"]},
+    {"category": "heroes", "question": "Какая основная характеристика у героя Invoker после патча 7.33?", "options": ["Универсальный", "Интеллект", "Ловкость", "Сила"], "correct": "Универсальный", "image": BACKGROUND_IMAGES["heroes"]},
+    {"category": "heroes", "question": "Какой герой наносит урон ультимейтом в зависимости от недостающего здоровья врага?", "options": ["Necrophos", "Ancient Apparition", "Lion", "Zeus"], "correct": "Necrophos", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "Как называется ультимативная способность героя Enigma?", "options": ["Black Hole", "Midnight Pulse", "Malefice", "Gravity Well"], "correct": "Black Hole", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "Какой герой НЕ имеет активных способностей до 6-го уровня по умолчанию?", "options": ["Wraith King", "Spectre", "Phantom Assassin", "Никакой"], "correct": "Никакой", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "Какой герой использует способность 'Static Storm'?", "options": ["Disruptor", "Razor", "Zeus", "Storm Spirit"], "correct": "Disruptor", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "Как называется ультимейт героя Earthshaker?", "options": ["Echo Slam", "Fissure", "Enchant Totem", "Aftershock"], "correct": "Echo Slam", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "Какая способность Morphling позволяет ему менять атрибуты силы и ловкости?", "options": ["Attribute Shift", "Waveform", "Adaptive Strike", "Morph"], "correct": "Attribute Shift", "image": BACKGROUND_IMAGES["heroes"]},
-    {"category": "heroes", "question": "Какой герой при смерти оставляет после себя замедляющее замешательство и бомбу?", "options": ["Techies", "Pugna", "Clockwerk", "Gyrocopter"], "correct": "Techies", "image": BACKGROUND_IMAGES["heroes"]},
+    {"category": "heroes", "question": "Какой герой при смерти оставляет после себя мины и взрывается?", "options": ["Techies", "Pugna", "Clockwerk", "Gyrocopter"], "correct": "Techies", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "Как называется способность Storm Spirit, позволяющая ему летать по карте?", "options": ["Ball Lightning", "Static Remnant", "Electric Vortex", "Overload"], "correct": "Ball Lightning", "image": BACKGROUND_IMAGES["heroes"]},
-    {"category": "heroes", "question": "Какой герой при выстреле ультимейтом наносит чистый урон на всю карту (Finger of Death при Aghanim)?", "options": ["Ancient Apparition", "Zeus", "Sniper", "Invoker"], "correct": "Ancient Apparition", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "Какой персонаж превращает врагов в камень ультимейтом Stone Gaze?", "options": ["Medusa", "Gorgon", "Naga Siren", "Tidehunter"], "correct": "Medusa", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "Какой герой крадёт урон от атаки врага способностью Static Link?", "options": ["Razor", "Vengeful Spirit", "Bane", "Viper"], "correct": "Razor", "image": BACKGROUND_IMAGES["heroes"]},
-    {"category": "heroes", "question": "Какой персонаж способен полностью блокировать урон благодаря Refraction?", "options": ["Templar Assassin", "Phantom Assassin", "Spectre", "Melting point"], "correct": "Templar Assassin", "image": BACKGROUND_IMAGES["heroes"]},
+    {"category": "heroes", "question": "Какой персонаж способен полностью блокировать урон благодаря Refraction?", "options": ["Templar Assassin", "Phantom Assassin", "Spectre", "Templar"], "correct": "Templar Assassin", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "Как называется ультимативная способность Tidehunter?", "options": ["Ravage", "Gush", "Anchor Smash", "Kraken Shell"], "correct": "Ravage", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "Какой герой получает бонус к броне и здоровью за каждого убитого врага (Flesh Heap)?", "options": ["Pudge", "Axe", "Bristleback", "Centaur Warrunner"], "correct": "Pudge", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "Какая способность героя Tinker позволяет сбрасывать перезарядку предметов?", "options": ["Rearm", "Heat-Seeking Missile", "Laser", "Defense Matrix"], "correct": "Rearm", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "Какого типа урон наносит способность Sun Strike героя Invoker?", "options": ["Чистый", "Магический", "Физический", "Смешанный"], "correct": "Чистый", "image": BACKGROUND_IMAGES["heroes"]},
-    {"category": "heroes", "question": "Какое максимальное число зарядов ультимейта у Void Spirit без талантов?", "options": ["2", "1", "3", "4"], "correct": "2", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "Какой герой может превращать деревья в своих подконтрольных юнитов?", "options": ["Nature's Prophet", "Treant Protector", "Timbersaw", "Beastmaster"], "correct": "Nature's Prophet", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "Какой герой обладает способностью 'Supernova'?", "options": ["Phoenix", "Dawnbreaker", "Keeper of the Light", "Lina"], "correct": "Phoenix", "image": BACKGROUND_IMAGES["heroes"]},
     {"category": "heroes", "question": "У какого героя есть способность 'Shallow Grave', спасающая от смерти?", "options": ["Dazzle", "Oracle", "Abaddon", "Shadow Priest"], "correct": "Dazzle", "image": BACKGROUND_IMAGES["heroes"]},
@@ -133,35 +131,26 @@ QUESTIONS_BASE = [
     {"category": "lore", "question": "Какой игрок играл на Pudge в знаменитой связке 'Fountain Hook' на TI3?", "options": ["Dendi", "Puppey", "XBOCT", "Funn1k"], "correct": "Dendi", "image": BACKGROUND_IMAGES["lore"]},
     {"category": "lore", "question": "Как называется главный приз турнира The International?", "options": ["Aegis of Champions", "Summoner's Cup", "Divine Rapier Trophy", "Immortal Shield"], "correct": "Aegis of Champions", "image": BACKGROUND_IMAGES["lore"]},
     {"category": "lore", "question": "Какой игрок стал самым молодым победителем The International в истории (TI5)?", "options": ["SumaiL", "Topson", "Yatoro", "Miracle-"], "correct": "SumaiL", "image": BACKGROUND_IMAGES["lore"]},
-    {"category": "lore", "question": "Какое имя носит брата-близнеца герою Anti-Mage в лоре игры?", "options": ["Terrorblade", "Soul Keeper", "Magina", "Invoker"], "correct": "Terrorblade", "image": BACKGROUND_IMAGES["lore"]},
+    {"category": "lore", "question": "Какое имя носит брат-близнец герою Anti-Mage в лоре игры?", "options": ["Terrorblade", "Soul Keeper", "Magina", "Invoker"], "correct": "Terrorblade", "image": BACKGROUND_IMAGES["lore"]},
     {"category": "lore", "question": "Какая команда стала победителем The International 2017 (TI7)?", "options": ["Team Liquid", "Newbee", "LFY", "VP"], "correct": "Team Liquid", "image": BACKGROUND_IMAGES["lore"]},
-    {"category": "lore", "question": "Как зову Богиню Луны, которой поклоняются Mirana и Luna?", "options": ["Selemene", "Verodicia", "Nyx", "Skadi"], "correct": "Selemene", "image": BACKGROUND_IMAGES["lore"]},
+    {"category": "lore", "question": "Как зовут Богиню Луны, которой поклоняются Mirana и Luna?", "options": ["Selemene", "Verodicia", "Nyx", "Skadi"], "correct": "Selemene", "image": BACKGROUND_IMAGES["lore"]},
     {"category": "lore", "question": "Какой персонаж по лору является древним драконом, принявшим человеческий облик?", "options": ["Davion (Dragon Knight)", "Jakiro", "Viper", "Winter Wyvern"], "correct": "Davion (Dragon Knight)", "image": BACKGROUND_IMAGES["lore"]},
     {"category": "lore", "question": "Назовите имя легендарного игрока, сформировавшего золотой состав Virtus.Pro (2016-2019 гг.)?", "options": ["Solo", "RAMZES666", "No[o]ne", "9pasha"], "correct": "Solo", "image": BACKGROUND_IMAGES["lore"]},
     {"category": "lore", "question": "Какая фракция защищает древо Силы (World Tree)?", "options": ["Radiant", "Dire", "Sentinel", "Scourge"], "correct": "Radiant", "image": BACKGROUND_IMAGES["lore"]},
     {"category": "lore", "question": "Какая команда одержала победу на TI4 со знаменитой стратегией 'Fast Push'?", "options": ["Newbee", "Vici Gaming", "DK", "EG"], "correct": "Newbee", "image": BACKGROUND_IMAGES["lore"]},
-    {"category": "lore", "question": "Как зову древнего титана, сотворившего мир Dota 2?", "options": ["Elder Titan", "Earthshaker", "Tiny", "Void Spirit"], "correct": "Elder Titan", "image": BACKGROUND_IMAGES["lore"]},
+    {"category": "lore", "question": "Как зовут древнего титана, сотворившего мир Dota 2?", "options": ["Elder Titan", "Earthshaker", "Tiny", "Void Spirit"], "correct": "Elder Titan", "image": BACKGROUND_IMAGES["lore"]},
     {"category": "lore", "question": "Сколько игроков входит в официальный состав команды по Dota 2 на карте?", "options": ["5", "6", "4", "3"], "correct": "5", "image": BACKGROUND_IMAGES["lore"]},
-    {"category": "lore", "question": "Какой предмет ассоциируется с игроком AdmiralBulldog?", "options": ["Lone Druid's Bear / Radiance", "Blink Dagger", "Divine Rapier", "Dagon"], "correct": "Lone Druid's Bear / Radiance", "image": BACKGROUND_IMAGES["lore"]},
-    {"category": "lore", "question": "Какой игрок первым в мире достиг 10 000 MMR?", "options": ["Abed", "MidOne", "Miracle-", "Arteezy"], "correct": "Abed", "image": BACKGROUND_IMAGES["lore"]},
     {"category": "lore", "question": "Какая организация выиграла The International 2016 (TI6)?", "options": ["Wings Gaming", "Digital Chaos", "Evil Geniuses", "FNATIC"], "correct": "Wings Gaming", "image": BACKGROUND_IMAGES["lore"]},
     {"category": "lore", "question": "Кем по лору является Kunkka?", "options": ["Адмиралом флота", "Пиратом", "Духом океана", "Наёмником"], "correct": "Адмиралом флота", "image": BACKGROUND_IMAGES["lore"]},
     {"category": "lore", "question": "В каком году официально вышло глобальное обновление 7.00?", "options": ["2016", "2015", "2017", "2018"], "correct": "2016", "image": BACKGROUND_IMAGES["lore"]},
-    {"category": "lore", "question": "Как называется родина героя Storm Spirit, Earth Spirit и Ember Spirit?", "options": ["Небесный Пик / Равнина Нефрита", "Ундердорф", "Азгора", "Снивлинг"], "correct": "Небесный Пик / Равнина Нефрита", "image": BACKGROUND_IMAGES["lore"]},
-    {"category": "lore", "question": "Какое имя носит ткач времени и нитей судьбы?", "options": ["Weaver (Skitskurr)", "Faceless Void", "Oracle", "Clockwerk"], "correct": "Weaver (Skitskurr)", "image": BACKGROUND_IMAGES["lore"]},
+    {"category": "lore", "question": "Какое имя носит ткач времени и нитей судьбы?", "options": ["Weaver", "Faceless Void", "Oracle", "Clockwerk"], "correct": "Weaver", "image": BACKGROUND_IMAGES["lore"]},
     {"category": "lore", "question": "Какая команда проиграла в финале TI10 со счетом 2:3 против Team Spirit?", "options": ["PSG.LGD", "Secret", "OG", "VG"], "correct": "PSG.LGD", "image": BACKGROUND_IMAGES["lore"]},
     {"category": "lore", "question": "Как по лору зовут героя Shadow Fiend?", "options": ["Nevermore", "Shadow Demon", "Doom", "Lucifer"], "correct": "Nevermore", "image": BACKGROUND_IMAGES["lore"]},
-    {"category": "lore", "question": "Какой атрибут имеет фонтан на базе команды?", "options": ["Неуязвимость и огромный урон", "Развеивание магии", "Броня +100", "Замедляющая аура"], "correct": "Неуязвимость и огромный урон", "image": BACKGROUND_IMAGES["lore"]},
-    {"category": "lore", "question": "В какому виду принадлежит герой Jakiro?", "options": ["Двуглавый Дракон", "Виверна", "Феникс", "Гидра"], "correct": "Двуглавый Дракон", "image": BACKGROUND_IMAGES["lore"]},
+    {"category": "lore", "question": "К какому виду принадлежит герой Jakiro?", "options": ["Двуглавый Дракон", "Виверна", "Феникс", "Гидра"], "correct": "Двуглавый Дракон", "image": BACKGROUND_IMAGES["lore"]},
     {"category": "lore", "question": "Какой из этих героев НЕ является демоном по лору?", "options": ["Sven", "Doom", "Shadow Demon", "Terrorblade"], "correct": "Sven", "image": BACKGROUND_IMAGES["lore"]},
-    {"category": "lore", "question": "Какое ключевое новшество принесло обновление 7.33?", "options": ["Универсальные герои и расширение карты на 40%", "Таланты героев", "Нейтральные предметы", "Второй рошан"], "correct": "Универсальные герои и расширение карты на 40%", "image": BACKGROUND_IMAGES["lore"]},
-    {"category": "lore", "question": "В честь какого разработчика первоначальной DotA назван предмет 'Guinsoo's Scythe of Vyse'?", "options": ["Guinsoo", "IceFrog", "Eul", "Neichus"], "correct": "Guinsoo", "image": BACKGROUND_IMAGES["lore"]},
     {"category": "lore", "question": "Как называется анимационный сериал по мотивам Dota 2 от Netflix?", "options": ["Dota: Dragon's Blood", "Dota: Arcane", "Dota: Heroes United", "Dota: Book of Selemene"], "correct": "Dota: Dragon's Blood", "image": BACKGROUND_IMAGES["lore"]},
     {"category": "lore", "question": "Какое оригинальное имя героя Sniper?", "options": ["Kardel Sharpeye", "Sniper Rifle", "Dwarven Sniper", "Snippy"], "correct": "Kardel Sharpeye", "image": BACKGROUND_IMAGES["lore"]},
-    {"category": "lore", "question": "Кто из игроков получил прозвище 'GOD' на профессиональной сцене?", "options": ["G (Brabx)", "Miracle-", "Topson", "Ana"], "correct": "G (Brabx)", "image": BACKGROUND_IMAGES["lore"]},
-    {"category": "lore", "question": "Как в Warcraft III называется моделька героя Axe?", "options": ["Grom Hellscream", "Thrall", "Magtheridon", "Rexxar"], "correct": "Grom Hellscream", "image": BACKGROUND_IMAGES["lore"]},
-    {"category": "lore", "question": "Какое оружие использует герой Sven?", "options": ["Двуручный меч", "Молот", "Топор", "Копьё"], "correct": "Двуручный меч", "image": BACKGROUND_IMAGES["lore"]},
-    {"category": "lore", "question": "Какой турнир в Dota 2 даёт право на прямые приглашения / очки DPC?", "options": ["Major / Valve Events", "Minor Showmatch", "Pub Masters", "Local Cup"], "correct": "Major / Valve Events", "image": BACKGROUND_IMAGES["lore"]}
+    {"category": "lore", "question": "Какое оружие использует герой Sven?", "options": ["Двуручный меч", "Молот", "Топор", "Копьё"], "correct": "Двуручный меч", "image": BACKGROUND_IMAGES["lore"]}
 ]
 
 class QuizStates(StatesGroup):
@@ -180,7 +169,7 @@ def main_menu():
 
 def category_keyboard():
     kb = [
-        [InlineKeyboardButton(text="🎲 Все категории (Микс)", callback_data="cat_all")],
+        [InlineKeyboardButton(text="🎲 Микс (Всё подряд)", callback_data="cat_all")],
         [InlineKeyboardButton(text="🗡 Предметы", callback_data="cat_items")],
         [InlineKeyboardButton(text="🧙‍♂️ Герои и Механики", callback_data="cat_heroes")],
         [InlineKeyboardButton(text="🏆 Киберспорт и Лор", callback_data="cat_lore")]
@@ -266,7 +255,7 @@ async def ask_category(message: types.Message, state: FSMContext):
     if "last_msg_id" in data:
         await safe_delete_message(message.chat.id, data["last_msg_id"])
 
-    msg = await message.answer("Выбери режим:", reply_markup=category_keyboard())
+    msg = await message.answer("Выбери режим тестирования:", reply_markup=category_keyboard())
     await state.update_data(last_msg_id=msg.message_id)
     await state.set_state(QuizStates.choosing_category)
 
@@ -280,7 +269,7 @@ async def start_quiz_category(callback: types.CallbackQuery, state: FSMContext):
         pool = [q for q in QUESTIONS_BASE if q.get("category") == cat]
 
     random.shuffle(pool)
-    selected_questions = pool[:min(12, len(pool))]
+    selected_questions = pool[:min(10, len(pool))]
 
     await safe_delete_message(callback.message.chat.id, callback.message.message_id)
 
@@ -322,7 +311,7 @@ async def render_question(chat_id: int, state: FSMContext):
         text = (
             f"🎉 **Тест завершён!**\n\n"
             f"✅ Правильных ответов: **{correct} из {total}**\n\n"
-            f"Посмотреть общую статистику можно в разделе «📊 Моя статистика»."
+            f"Посмотреть статистику можно в разделе «📊 Моя статистика»."
         )
         msg = await bot.send_message(chat_id, text, parse_mode="Markdown", reply_markup=main_menu())
         await state.update_data(last_msg_id=msg.message_id)
@@ -336,7 +325,12 @@ async def render_question(chat_id: int, state: FSMContext):
     kb = [[InlineKeyboardButton(text=opt, callback_data=f"ans_{opt}")] for opt in options]
     q_text = f"**Вопрос {index + 1} из {len(questions)}**\n\n{q['question']}"
 
-    msg = await bot.send_photo(chat_id, photo=q["image"], caption=q_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    try:
+        msg = await bot.send_photo(chat_id, photo=q["image"], caption=q_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    except Exception as e:
+        # Резервный вариант, если Telegram не смог обработать картинку
+        msg = await bot.send_message(chat_id, q_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    
     await state.update_data(last_msg_id=msg.message_id)
 
 @dp.callback_query(F.data.startswith("ans_"), QuizStates.in_quiz)
@@ -362,7 +356,6 @@ async def handle_answer(callback: types.CallbackQuery, state: FSMContext):
         wrong_count=wrong_count
     )
 
-    await asyncio.sleep(0.3)
     await render_question(callback.message.chat.id, state)
 
 @dp.message(F.text == "📊 Моя статистика")
@@ -448,3 +441,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
