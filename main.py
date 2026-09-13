@@ -1,4 +1,4 @@
-import asyncio
+  import asyncio
 import logging
 import os
 import random
@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 
-QUESTIONS_PER_QUIZ = 12
+QUESTIONS_PER_QUIZ = 10
 
 def init_db():
     conn = sqlite3.connect("dotamozg.db")
@@ -38,10 +38,10 @@ def init_db():
 init_db()
 
 QUESTIONS_BASE = [
-    # --- КАТЕГОРИЯ: Предметы и Рецепты ---
+    # --- КАТЕГОРИЯ: Предметы ---
     {
         "category": "items",
-        "question": "Какой предмет даёт полный иммунитет к эффектам заклинаний на время действия?",
+        "question": "Какой предмет даёт полный иммунитет к заклинаниям на время действия?",
         "options": ["Black King Bar", "Linken's Sphere", "Lotus Orb", "Pipe of Insight"],
         "correct": "Black King Bar"
     },
@@ -75,30 +75,6 @@ QUESTIONS_BASE = [
         "options": ["Radiance", "Shiva's Guard", "Maelstrom", "Battle Fury"],
         "correct": "Radiance"
     },
-    {
-        "category": "items",
-        "question": "Сколько секунд длится действие Aegis of the Immortal в инвентаре?",
-        "options": ["3 минуты", "5 минут", "6 минут", "10 минут"],
-        "correct": "5 минут"
-    },
-    {
-        "category": "items",
-        "question": "Какой предмет мгновенно снимает большинство негативных эффектов и создаёт 2 иллюзии?",
-        "options": ["Manta Style", "Sange and Yasha", "Satanic", "Nullifier"],
-        "correct": "Manta Style"
-    },
-    {
-        "category": "items",
-        "question": "Какой из этих предметов НЕ покупается в потайной лавке (Secret Shop)?",
-        "options": ["Demon Edge", "Reaver", "Hyperstone", "Claymore"],
-        "correct": "Claymore"
-    },
-    {
-        "category": "items",
-        "question": "Какой артефакт сжигает ману цели при каждой физической атаке?",
-        "options": ["Diffusal Blade", "Desolator", "MKB", "Basher"],
-        "correct": "Diffusal Blade"
-    },
 
     # --- КАТЕГОРИЯ: Герои и Механики ---
     {
@@ -109,7 +85,7 @@ QUESTIONS_BASE = [
     },
     {
         "category": "heroes",
-        "question": "Сколько сфер у Invoker вокруг него одновременно?",
+        "question": "Сколько сфер у Invoker одновременно вращается вокруг него?",
         "options": ["2", "3", "4", "5"],
         "correct": "3"
     },
@@ -127,7 +103,7 @@ QUESTIONS_BASE = [
     },
     {
         "category": "heroes",
-        "question": "Какой герой может создавать полноценные копии самого себя с помощью способности Divided We Stand?",
+        "question": "Какой герой создает полноценные копии себя способностью Divided We Stand?",
         "options": ["Phantom Lancer", "Naga Siren", "Meepo", "Chaos Knight"],
         "correct": "Meepo"
     },
@@ -136,30 +112,6 @@ QUESTIONS_BASE = [
         "question": "Какой герой произносит знаменитую фразу 'Fresh meat!'?",
         "options": ["Lifestealer", "Pudge", "Doom", "Night Stalker"],
         "correct": "Pudge"
-    },
-    {
-        "category": "heroes",
-        "question": "Какая способность Butcher (Pudge) притягивает врага или союзника к себе?",
-        "options": ["Meat Hook", "Rot", "Dismember", "Flesh Heap"],
-        "correct": "Meat Hook"
-    },
-    {
-        "category": "heroes",
-        "question": "Какой нейтральный объект появляется на 20-й минуте игры и даёт Aghanim's Shard?",
-        "options": ["Рошан", "Терзатель (Tormentor)", "Аванпост", "Святилище"],
-        "correct": "Терзатель (Tormentor)"
-    },
-    {
-        "category": "heroes",
-        "question": "Сколько активных заклинаний может призвать Invoker с помощью способности Invoke?",
-        "options": ["8", "10", "12", "14"],
-        "correct": "10"
-    },
-    {
-        "category": "heroes",
-        "question": "Какой герой может переманивать нейтральных крипов под свой контроль?",
-        "options": ["Chen", "Enchantress", "Doom", "Все перечисленные"],
-        "correct": "Все перечисленные"
     },
 
     # --- КАТЕГОРИЯ: Киберспорт и Лор ---
@@ -171,7 +123,7 @@ QUESTIONS_BASE = [
     },
     {
         "category": "lore",
-        "question": "Какая команда выиграла первые два турнира The International подряд (TI8 и TI9)?",
+        "question": "Какая команда выиграла два TI подряд (TI8 и TI9)?",
         "options": ["Na'Vi", "OG", "Alliance", "Team Liquid"],
         "correct": "OG"
     },
@@ -183,45 +135,9 @@ QUESTIONS_BASE = [
     },
     {
         "category": "lore",
-        "question": "Как называется родной монастырь в лоре героя Anti-Mage?",
-        "options": ["Турстаркар", "Ясеневый лес", "Подземный город", "Остров Ультима"],
-        "correct": "Турстаркар"
-    },
-    {
-        "category": "lore",
         "question": "Кто выиграл самый первый The International (TI1) в 2011 году?",
         "options": ["Natus Vincere (Na'Vi)", "EHOME", "Invictus Gaming", "Alliance"],
         "correct": "Natus Vincere (Na'Vi)"
-    },
-
-    # --- КАТЕГОРИЯ: Угадай по картинке ---
-    {
-        "category": "photo",
-        "photo": "https://wikidota.ru/images/thumb/7/7b/Meat_Hook_icon.png/120px-Meat_Hook_icon.png",
-        "question": "Чья это иконка способности?",
-        "options": ["Pudge (Meat Hook)", "Clockwerk (Hookshot)", "Vengeful Spirit", "Abaddon"],
-        "correct": "Pudge (Meat Hook)"
-    },
-    {
-        "category": "photo",
-        "photo": "https://wikidota.ru/images/thumb/8/8e/Sun_Strike_icon.png/120px-Sun_Strike_icon.png",
-        "question": "Как называется эта способность Invoker?",
-        "options": ["Sun Strike", "Chaos Meteor", "EMP", "Deafening Blast"],
-        "correct": "Sun Strike"
-    },
-    {
-        "category": "photo",
-        "photo": "https://wikidota.ru/images/thumb/4/41/Black_Hole_icon.png/120px-Black_Hole_icon.png",
-        "question": "Какая способность изображена на картинке?",
-        "options": ["Black Hole", "Chronosphere", "Supernova", "Reverse Polarity"],
-        "correct": "Black Hole"
-    },
-    {
-        "category": "photo",
-        "photo": "https://wikidota.ru/images/thumb/a/a6/Omnislash_icon.png/120px-Omnislash_icon.png",
-        "question": "Какой герой использует эту ультимативную способность?",
-        "options": ["Juggernaut", "Sven", "Phantom Assassin", "Slayer"],
-        "correct": "Juggernaut"
     }
 ]
 
@@ -241,11 +157,10 @@ def main_menu():
 
 def category_keyboard():
     kb = [
-        [InlineKeyboardButton(text="🗡 Предметы и Рецепты", callback_data="cat_items")],
+        [InlineKeyboardButton(text="🗡 Предметы", callback_data="cat_items")],
         [InlineKeyboardButton(text="🧙‍♂️ Герои и Механики", callback_data="cat_heroes")],
         [InlineKeyboardButton(text="🏆 Киберспорт и Лор", callback_data="cat_lore")],
-        [InlineKeyboardButton(text="🖼 Угадай по картинке", callback_data="cat_photo")],
-        [InlineKeyboardButton(text="🎲 Микс (Все категории)", callback_data="cat_all")]
+        [InlineKeyboardButton(text="🎲 Все категории (Микс)", callback_data="cat_all")]
     ]
     return InlineKeyboardMarkup(inline_keyboard=kb)
 
@@ -297,7 +212,7 @@ async def process_rank(callback: types.CallbackQuery, state: FSMContext):
 
 @dp.message(F.text == "🎮 Начать викторину")
 async def ask_category(message: types.Message, state: FSMContext):
-    await message.answer("Выбери категорию вопросов для раунда:", reply_markup=category_keyboard())
+    await message.answer("Выбери категорию вопросов:", reply_markup=category_keyboard())
     await state.set_state(QuizStates.choosing_category)
 
 @dp.callback_query(F.data.startswith("cat_"), QuizStates.choosing_category)
@@ -319,13 +234,11 @@ async def start_quiz_category(callback: types.CallbackQuery, state: FSMContext):
         correct_count=0,
         wrong_count=0
     )
-    try:
-        await callback.message.delete()
-    except Exception:
-        pass
-    await send_next_question(callback.message.chat.id, state)
+    
+    # Запускаем первичное сообщение викторины
+    await render_question(callback.message, state, is_first=True)
 
-async def send_next_question(chat_id: int, state: FSMContext, last_msg_id: int = None):
+async def render_question(message: types.Message, state: FSMContext, is_first: bool = False):
     data = await state.get_data()
     questions = data["questions"]
     index = data["current_index"]
@@ -343,17 +256,12 @@ async def send_next_question(chat_id: int, state: FSMContext, last_msg_id: int =
                 correct_answers = correct_answers + ?, 
                 wrong_answers = wrong_answers + ?
             WHERE user_id = ?
-        """, (total, correct, wrong, chat_id))
+        """, (total, correct, wrong, message.chat.id))
         conn.commit()
         conn.close()
 
-        text = f"🎉 **Викторина окончена!**\n\nПравильных ответов: {correct} из {total}\nПосмотри результаты в «🏆 Моя доска почёта»."
-        if last_msg_id:
-            try:
-                await bot.delete_message(chat_id, last_msg_id)
-            except Exception:
-                pass
-        await bot.send_message(chat_id, text, parse_mode="Markdown", reply_markup=main_menu())
+        text = f"🎉 **Викторина окончена!**\n\nПравильных ответов: **{correct} из {total}**\nПосмотри результаты в «🏆 Моя доска почёта»."
+        await message.edit_text(text, parse_mode="Markdown")
         await state.clear()
         return
 
@@ -364,28 +272,13 @@ async def send_next_question(chat_id: int, state: FSMContext, last_msg_id: int =
     kb = [[InlineKeyboardButton(text=opt, callback_data=f"ans_{opt}")] for opt in options]
     q_text = f"**Вопрос {index + 1} из {len(questions)}**\n\n{q['question']}"
 
-    # Если прошлый вопрос содержал фото, удаляем его, так как типы сообщений разнятся
-    if last_msg_id:
-        try:
-            await bot.delete_message(chat_id, last_msg_id)
-        except Exception:
-            pass
-
-    if "photo" in q and q["photo"]:
-        try:
-            msg = await bot.send_photo(chat_id, photo=q["photo"], caption=q_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
-        except Exception:
-            msg = await bot.send_message(chat_id, q_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    if is_first:
+        await message.edit_text(q_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     else:
-        msg = await bot.send_message(chat_id, q_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
-
-    await state.update_data(last_msg_id=msg.message_id)
+        await message.edit_text(q_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
 @dp.callback_query(F.data.startswith("ans_"), QuizStates.in_quiz)
 async def handle_answer(callback: types.CallbackQuery, state: FSMContext):
-    # Убираем анимированное вращение на кнопке без всплывающего окна
-    await callback.answer()
-
     user_ans = callback.data.replace("ans_", "")
     data = await state.get_data()
     questions = data["questions"]
@@ -393,25 +286,13 @@ async def handle_answer(callback: types.CallbackQuery, state: FSMContext):
     q = questions[index]
 
     if user_ans == q["correct"]:
-        feedback = "✅ **Правильно!**"
+        await callback.answer("✅ Правильно!", show_alert=False)
         correct_count = data["correct_count"] + 1
         wrong_count = data["wrong_count"]
     else:
-        feedback = f"❌ **Неверно!**\nПравильный ответ: **{q['correct']}**"
+        await callback.answer(f"❌ Неверно! Ответ: {q['correct']}", show_alert=False)
         correct_count = data["correct_count"]
         wrong_count = data["wrong_count"] + 1
-
-    # Редактируем текущее сообщение: убираем клавиатуру и пишем результат
-    try:
-        if callback.message.caption:
-            await callback.message.edit_caption(caption=f"{callback.message.caption}\n\n{feedback}", parse_mode="Markdown", reply_markup=None)
-        else:
-            await callback.message.edit_text(text=f"{callback.message.text}\n\n{feedback}", parse_mode="Markdown", reply_markup=None)
-    except Exception:
-        pass
-
-    # Даём 1.5 секунды, чтобы прочитать результат
-    await asyncio.sleep(1.5)
 
     await state.update_data(
         current_index=index + 1,
@@ -419,7 +300,7 @@ async def handle_answer(callback: types.CallbackQuery, state: FSMContext):
         wrong_count=wrong_count
     )
 
-    await send_next_question(callback.message.chat.id, state, last_msg_id=callback.message.message_id)
+    await render_question(callback.message, state, is_first=False)
 
 @dp.message(F.text == "🏆 Моя доска почёта")
 async def show_stats(message: types.Message):
