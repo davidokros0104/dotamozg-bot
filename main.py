@@ -17,9 +17,6 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 
-# 12 вопросов за сессию (4 блока по 3 вопроса)
-QUESTIONS_PER_QUIZ = 12
-
 def init_db():
     conn = sqlite3.connect("dotamozg.db")
     cursor = conn.cursor()
@@ -96,7 +93,8 @@ async def cmd_start(message: types.Message, state: FSMContext):
     conn.close()
 
     if not user:
-        await message.answer("Привет! Добро пожаловать в викторину «ДотаМозг»! 🧠\nВведи свой игровой никнейм:")
+        msg = await message.answer("Привет! Добро пожаловать в викторину «ДотаМозг»! 🧠\nВведи свой игровой никнейм:")
+        await state.update_data(prompt_msg_id=msg.message_id)
         await state.set_state(QuizStates.waiting_for_nickname)
     else:
         await message.answer(f"С возвращением, {user[0]}!", reply_markup=main_menu())
@@ -113,6 +111,17 @@ async def cmd_reset(message: types.Message, state: FSMContext):
 
 @dp.message(QuizStates.waiting_for_nickname)
 async def process_nickname(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    prompt_msg_id = data.get("prompt_msg_id")
+    
+    # Удаляем предыдущий запрос никнейма и сообщение пользователя
+    try:
+        if prompt_msg_id:
+            await bot.delete_message(chat_id=message.chat.id, message_id=prompt_msg_id)
+        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    except Exception:
+        pass
+
     await state.update_data(nickname=message.text)
     ranks = ["Herald", "Guardian", "Crusader", "Archon", "Legend", "Ancient", "Divine", "Immortal"]
     kb = []
@@ -122,14 +131,14 @@ async def process_nickname(message: types.Message, state: FSMContext):
             row.append(InlineKeyboardButton(text=ranks[i+1], callback_data=f"rank_{ranks[i+1]}"))
         kb.append(row)
     
-    await message.answer("Отлично! Теперь выбери свой текущий ранг в Dota 2:", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    msg = await message.answer("Отлично! Теперь выбери свой текущий ранг в Dota 2:", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    await state.update_data(prompt_msg_id=msg.message_id)
     await state.set_state(QuizStates.waiting_for_rank)
 
 @dp.callback_query(F.data.startswith("rank_"))
 async def process_rank(callback: types.CallbackQuery, state: FSMContext):
     selected_rank = callback.data.split("_")[1]
     data = await state.get_data()
-    
     nickname = data.get("nickname") or callback.from_user.first_name or "Игрок"
 
     conn = sqlite3.connect("dotamozg.db")
@@ -141,11 +150,23 @@ async def process_rank(callback: types.CallbackQuery, state: FSMContext):
     conn.commit()
     conn.close()
 
+    # Удаляем сообщение с выбором ранга
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
+
     await callback.message.answer(f"Регистрация завершена! Твой ранг: {selected_rank}.", reply_markup=main_menu())
     await state.clear()
 
 @dp.message(F.text == "🎮 Начать викторину")
 async def ask_category(message: types.Message, state: FSMContext):
+    # Удаляем команду пользователя
+    try:
+        await message.delete()
+    except Exception:
+        pass
+
     await message.answer("Выбери режим игры:", reply_markup=category_keyboard())
     await state.set_state(QuizStates.choosing_category)
 
@@ -270,6 +291,12 @@ async def show_stats(message: types.Message):
 
 @dp.message(F.text == "📊 Мой профиль / Сменить ранг")
 async def change_rank_prompt(message: types.Message, state: FSMContext):
+    # Удаляем команду пользователя
+    try:
+        await message.delete()
+    except Exception:
+        pass
+
     ranks = ["Herald", "Guardian", "Crusader", "Archon", "Legend", "Ancient", "Divine", "Immortal"]
     kb = []
     for i in range(0, len(ranks), 2):
@@ -278,7 +305,8 @@ async def change_rank_prompt(message: types.Message, state: FSMContext):
             row.append(InlineKeyboardButton(text=ranks[i+1], callback_data=f"rank_{ranks[i+1]}"))
         kb.append(row)
     
-    await message.answer("Выбери новый ранг для своего профиля:", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    msg = await message.answer("Выбери новый ранг для своего профиля:", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    await state.update_data(prompt_msg_id=msg.message_id)
     await state.set_state(QuizStates.waiting_for_rank)
 
 async def main():
