@@ -41,18 +41,23 @@ QUESTIONS_BASE = [
     {"category": "items", "question": "Какой предмет собирается из Blink Dagger и Reaver?", "options": ["Overwhelming Blink", "Swift Blink", "Arcane Blink", "Wind Waker"], "correct": "Overwhelming Blink"},
     {"category": "items", "question": "Сколько стоит рецепт для сборки Hand of Midas?", "options": ["1750", "1500", "1400", "2200"], "correct": "1750"},
     {"category": "items", "question": "Какой предмет даёт эффект 'True Sight' вокруг владельца?", "options": ["Dust of Appearance", "Sentry Ward", "Gem of True Sight", "Shadow Blade"], "correct": "Gem of True Sight"},
+    {"category": "items", "question": "Какой предмет пассивно даёт вампиризм заклинаниями (Spell Lifesteal)?", "options": ["Bloodstone", "Octarine Core", "Voodoo Mask", "Satanic"], "correct": "Voodoo Mask"},
+    {"category": "items", "question": "Какой расходник восстанавливает ману со временем и сбивается при получении урона от героев?", "options": ["Clarity", "Tango", "Healing Salve", "Enchanted Mango"], "correct": "Clarity"},
 
     # --- БЛОК 2: Герои и Механики ---
     {"category": "heroes", "question": "Какой атрибут является основным для героя Pudge?", "options": ["Ловкость", "Сила", "Интеллект", "Универсальный"], "correct": "Сила"},
     {"category": "heroes", "question": "Сколько сфер у Invoker одновременно вращается вокруг него?", "options": ["2", "3", "4", "5"], "correct": "3"},
     {"category": "heroes", "question": "Как называется ультимейт героя Rubick?", "options": ["Spell Steal", "Telekinesis", "Fade Bolt", "Arcane Supremacy"], "correct": "Spell Steal"},
     {"category": "heroes", "question": "Какой герой создает полноценные копии себя способностью Divided We Stand?", "options": ["Phantom Lancer", "Naga Siren", "Meepo", "Chaos Knight"], "correct": "Meepo"},
+    {"category": "heroes", "question": "Какой герой может превращать врагов в лягушек или куриц способностью Hex?", "options": ["Lion", "Shadow Shaman", "Tinker", "Rubick"], "correct": "Shadow Shaman"},
+    {"category": "heroes", "question": "Какая способность Sniper позволяет стрелять на огромную дистанцию с задержкой?", "options": ["Assassinate", "Shrapnel", "Take Aim", "Headshot"], "correct": "Assassinate"},
 
     # --- БЛОК 3: Киберспорт и Лор ---
     {"category": "lore", "question": "Какая команда выиграла The International 2021 (TI10)?", "options": ["PSG.LGD", "OG", "Team Spirit", "Team Liquid"], "correct": "Team Spirit"},
     {"category": "lore", "question": "Какая команда выиграла два TI подряд (TI8 и TI9)?", "options": ["Na'Vi", "OG", "Alliance", "Team Liquid"], "correct": "OG"},
     {"category": "lore", "question": "Как зовут нейтрального босса, из которого выпадает Aegis of the Immortal?", "options": ["Tormentor", "Roshan", "Satanic", "Ancient Blue Dragon"], "correct": "Roshan"},
     {"category": "lore", "question": "Кто выиграл самый первый The International (TI1) в 2011 году?", "options": ["Natus Vincere (Na'Vi)", "EHOME", "Invictus Gaming", "Alliance"], "correct": "Natus Vincere (Na'Vi)"},
+    {"category": "lore", "question": "Какой игрок известен своей легендарной игрой на Pudge и затягиванием под фонтан (Fountain Hook)?", "options": ["Dendi", "Puppey", "Miracle-", "Topson"], "correct": "Dendi"},
 
     # --- БЛОК 4: Сложный микс ---
     {"category": "mix", "question": "Какой предмет перезаряжает все способности и предметы героя?", "options": ["Refresher Orb", "Scythe of Vyse", "Octarine Core", "Bloodstone"], "correct": "Refresher Orb"},
@@ -172,10 +177,10 @@ async def start_quiz_category(callback: types.CallbackQuery, state: FSMContext):
         lore = [q for q in QUESTIONS_BASE if q.get("category") == "lore"]
         mix = [q for q in QUESTIONS_BASE if q.get("category") == "mix"]
 
-        block1 = random.sample(items, 3)
-        block2 = random.sample(heroes, 3)
-        block3 = random.sample(lore, 3)
-        block4 = random.sample(mix, 3)
+        block1 = random.sample(items, min(3, len(items)))
+        block2 = random.sample(heroes, min(3, len(heroes)))
+        block3 = random.sample(lore, min(3, len(lore)))
+        block4 = random.sample(mix, min(3, len(mix)))
 
         selected_questions = block1 + block2 + block3 + block4
     else:
@@ -225,8 +230,7 @@ async def render_question(message: types.Message, state: FSMContext):
 
     kb = [[InlineKeyboardButton(text=opt, callback_data=f"ans_{opt}")] for opt in options]
     
-    block_num = (index // 3) + 1
-    q_text = f"**Блок {block_num} | Вопрос {index + 1} из {len(questions)}**\n\n{q['question']}"
+    q_text = f"**Вопрос {index + 1} из {len(questions)}**\n\n{q['question']}"
 
     await message.edit_text(q_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
@@ -303,3 +307,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
