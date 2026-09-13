@@ -139,6 +139,18 @@ async def show_stats(message: types.Message):
     )
     await message.answer(stats_text, parse_mode="Markdown")
 
+@dp.message(F.text == "🎮 Начать викторину")
+async def start_quiz(message: types.Message, state: FSMContext):
+    await state.clear()
+    await state.set_state(QuizStates.in_quiz)
+    
+    # Отправляем первый вопрос из массива QUESTIONS
+    q = QUESTIONS[0]
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=opt, callback_data=f"ans_0_{i}")] 
+        for i, opt in enumerate(q["options"])
+    ])
+    await message.answer(f"Вопрос 1:\n{q['q']}", reply_markup=kb)
 async def main():
     await dp.start_polling(bot)
 
