@@ -9,7 +9,8 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 # Вставьте ваш новый токен сюда
-API_TOKEN = "ВАШ_НОВЫЙ_ТОКЕН_ИЗ_BOTFATHER"
+import os
+API_TOKEN = os.getenv("BOT_TOKEN")
 
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
