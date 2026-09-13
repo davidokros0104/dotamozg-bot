@@ -101,6 +101,16 @@ async def cmd_start(message: types.Message, state: FSMContext):
     else:
         await message.answer(f"С возвращением, {user[0]}!", reply_markup=main_menu())
 
+@dp.message(Command("reset"))
+async def cmd_reset(message: types.Message, state: FSMContext):
+    conn = sqlite3.connect("dotamozg.db")
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM users WHERE user_id = ?", (message.from_user.id,))
+    conn.commit()
+    conn.close()
+    await state.clear()
+    await message.answer("🔄 Ваш профиль и статистика очищены!\n\nНажмите /start, чтобы пройти регистрацию с нуля.")
+
 @dp.message(QuizStates.waiting_for_nickname)
 async def process_nickname(message: types.Message, state: FSMContext):
     await state.update_data(nickname=message.text)
@@ -144,7 +154,6 @@ async def start_quiz_category(callback: types.CallbackQuery, state: FSMContext):
     cat = callback.data.replace("cat_", "")
     
     if cat == "all":
-        # Формируем 4 блока по 3 вопроса = 12 вопросов
         items = [q for q in QUESTIONS_BASE if q.get("category") == "items"]
         heroes = [q for q in QUESTIONS_BASE if q.get("category") == "heroes"]
         lore = [q for q in QUESTIONS_BASE if q.get("category") == "lore"]
@@ -203,7 +212,6 @@ async def render_question(message: types.Message, state: FSMContext):
 
     kb = [[InlineKeyboardButton(text=opt, callback_data=f"ans_{opt}")] for opt in options]
     
-    # Визуальное разделение на 4 блока
     block_num = (index // 3) + 1
     q_text = f"**Блок {block_num} | Вопрос {index + 1} из {len(questions)}**\n\n{q['question']}"
 
