@@ -84,8 +84,15 @@ def category_keyboard():
     ]
     return InlineKeyboardMarkup(inline_keyboard=kb)
 
+async def safe_delete_message(chat_id: int, message_id: int):
+    try:
+        await bot.delete_message(chat_id=chat_id, message_id=message_id)
+    except Exception:
+        pass
+
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message, state: FSMContext):
+    await safe_delete_message(message.chat.id, message.message_id)
     conn = sqlite3.connect("dotamozg.db")
     cursor = conn.cursor()
     cursor.execute("SELECT nickname FROM users WHERE user_id = ?", (message.from_user.id,))
@@ -101,6 +108,7 @@ async def cmd_start(message: types.Message, state: FSMContext):
 
 @dp.message(Command("reset"))
 async def cmd_reset(message: types.Message, state: FSMContext):
+    await safe_delete_message(message.chat.id, message.message_id)
     conn = sqlite3.connect("dotamozg.db")
     cursor = conn.cursor()
     cursor.execute("DELETE FROM users WHERE user_id = ?", (message.from_user.id,))
@@ -112,15 +120,9 @@ async def cmd_reset(message: types.Message, state: FSMContext):
 @dp.message(QuizStates.waiting_for_nickname)
 async def process_nickname(message: types.Message, state: FSMContext):
     data = await state.get_data()
-    prompt_msg_id = data.get("prompt_msg_id")
-    
-    # Удаляем предыдущий запрос никнейма и сообщение пользователя
-    try:
-        if prompt_msg_id:
-            await bot.delete_message(chat_id=message.chat.id, message_id=prompt_msg_id)
-        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    except Exception:
-        pass
+    if "prompt_msg_id" in data:
+        await safe_delete_message(message.chat.id, data["prompt_msg_id"])
+    await safe_delete_message(message.chat.id, message.message_id)
 
     await state.update_data(nickname=message.text)
     ranks = ["Herald", "Guardian", "Crusader", "Archon", "Legend", "Ancient", "Divine", "Immortal"]
@@ -150,23 +152,13 @@ async def process_rank(callback: types.CallbackQuery, state: FSMContext):
     conn.commit()
     conn.close()
 
-    # Удаляем сообщение с выбором ранга
-    try:
-        await callback.message.delete()
-    except Exception:
-        pass
-
+    await safe_delete_message(callback.message.chat.id, callback.message.message_id)
     await callback.message.answer(f"Регистрация завершена! Твой ранг: {selected_rank}.", reply_markup=main_menu())
     await state.clear()
 
 @dp.message(F.text == "🎮 Начать викторину")
 async def ask_category(message: types.Message, state: FSMContext):
-    # Удаляем команду пользователя
-    try:
-        await message.delete()
-    except Exception:
-        pass
-
+    await safe_delete_message(message.chat.id, message.message_id)
     await message.answer("Выбери режим игры:", reply_markup=category_keyboard())
     await state.set_state(QuizStates.choosing_category)
 
@@ -180,15 +172,15 @@ async def start_quiz_category(callback: types.CallbackQuery, state: FSMContext):
         lore = [q for q in QUESTIONS_BASE if q.get("category") == "lore"]
         mix = [q for q in QUESTIONS_BASE if q.get("category") == "mix"]
 
-        block1 = random.sample(items, min(3, len(items)))
-        block2 = random.sample(heroes, min(3, len(heroes)))
-        block3 = random.sample(lore, min(3, len(lore)))
-        block4 = random.sample(mix, min(3, len(mix)))
+        block1 = random.sample(items, 3)
+        block2 = random.sample(heroes, 3)
+        block3 = random.sample(lore, 3)
+        block4 = random.sample(mix, 3)
 
         selected_questions = block1 + block2 + block3 + block4
     else:
         pool = [q for q in QUESTIONS_BASE if q.get("category") == cat]
-        selected_questions = random.sample(pool, min(12, len(pool)))
+        selected_questions = random.sample(pool, min(len(pool), 12))
 
     await state.set_state(QuizStates.in_quiz)
     await state.update_data(
@@ -265,6 +257,7 @@ async def handle_answer(callback: types.CallbackQuery, state: FSMContext):
 
 @dp.message(F.text == "🏆 Моя доска почёта")
 async def show_stats(message: types.Message):
+    await safe_delete_message(message.chat.id, message.message_id)
     conn = sqlite3.connect("dotamozg.db")
     cursor = conn.cursor()
     cursor.execute("SELECT nickname, rank, total_questions, correct_answers, wrong_answers FROM users WHERE user_id = ?", (message.from_user.id,))
@@ -291,11 +284,7 @@ async def show_stats(message: types.Message):
 
 @dp.message(F.text == "📊 Мой профиль / Сменить ранг")
 async def change_rank_prompt(message: types.Message, state: FSMContext):
-    # Удаляем команду пользователя
-    try:
-        await message.delete()
-    except Exception:
-        pass
+    await safe_delete_message(message.chat.id, message.message_id)
 
     ranks = ["Herald", "Guardian", "Crusader", "Archon", "Legend", "Ancient", "Divine", "Immortal"]
     kb = []
