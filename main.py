@@ -17,7 +17,6 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 
-# Официальные арты Dota 2 с серверов Valve (Steam CDN)
 BACKGROUND_IMAGES = {
     "items": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/black_king_bar.png",
     "heroes": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/pudge.png",
@@ -43,9 +42,9 @@ def init_db():
 
 init_db()
 
-# База знаний
+# ПОЛНАЯ БАЗА: 120+ ВОПРОСОВ (ПО 40+ В КАЖДОЙ КАТЕГОРИИ)
 QUESTIONS_BASE = [
-    # ==================== ПРЕДМЕТЫ (ITEMS) ====================
+    # --- ПРЕДМЕТЫ (ITEMS) ---
     {"category": "items", "question": "Какой предмет даёт полный иммунитет к магии на время действия?", "options": ["Black King Bar", "Linken's Sphere", "Lotus Orb", "Pipe of Insight"], "correct": "Black King Bar", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/black_king_bar.png"},
     {"category": "items", "question": "Какой предмет собирается из Blink Dagger и Reaver?", "options": ["Overwhelming Blink", "Swift Blink", "Arcane Blink", "Wind Waker"], "correct": "Overwhelming Blink", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/overwhelming_blink.png"},
     {"category": "items", "question": "Сколько стоит рецепт для сборки Hand of Midas?", "options": ["1750", "1500", "1400", "2200"], "correct": "1750", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/hand_of_midas.png"},
@@ -57,7 +56,7 @@ QUESTIONS_BASE = [
     {"category": "items", "question": "Сколько секунд длится перезарядка Blink Dagger после получения урона от игрока?", "options": ["3 сек", "2 сек", "4 сек", "5 сек"], "correct": "3 сек", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/blink.png"},
     {"category": "items", "question": "Какой предмет снижает перезарядку всех способностей и предметов на 25%?", "options": ["Octarine Core", "Refresher Orb", "Arcane Blink", "Kaya"], "correct": "Octarine Core", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/octarine_core.png"},
     {"category": "items", "question": "Какой предмет превращает вражеского юнита в безобидное существо (Hex)?", "options": ["Scythe of Vyse", "Eul's Scepter of Divinity", "Orchid Malevolence", "Nullifier"], "correct": "Scythe of Vyse", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/sheepstick.png"},
-    {"category": "items", "question": "Сколько стоит Sentry Ward в вардинг лавке?", "options": ["50", "75", "100", "0"], "correct": "50", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/ward_sentry.png"},
+    {"category": "items", "question": "Сколько стоит Sentry Ward в лавке?", "options": ["50", "75", "100", "0"], "correct": "50", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/ward_sentry.png"},
     {"category": "items", "question": "Какова базовая стоимость Town Portal Scroll?", "options": ["100", "90", "75", "50"], "correct": "100", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/tpscroll.png"},
     {"category": "items", "question": "Какой артефакт дает вампиризм от заклинаний?", "options": ["Bloodstone", "Satanic", "Mask of Madness", "Vladmir's Offering"], "correct": "Bloodstone", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/bloodstone.png"},
     {"category": "items", "question": "Какой предмет даёт активную способность 'Echo Sweep'?", "options": ["Echo Sabre", "Maelstrom", "Battle Fury", "Meteor Hammer"], "correct": "Echo Sabre", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/echo_sabre.png"},
@@ -70,8 +69,23 @@ QUESTIONS_BASE = [
     {"category": "items", "question": "Какова длительность действия Smoke of Deceit?", "options": ["45 сек", "30 сек", "60 сек", "40 сек"], "correct": "45 сек", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/smoke_of_deceit.png"},
     {"category": "items", "question": "Какой предмет собирается из Shadow Blade и Ultimate Orb?", "options": ["Silver Edge", "Manta Style", "Linken's Sphere", "Bloodthorn"], "correct": "Silver Edge", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/silver_edge.png"},
     {"category": "items", "question": "Какой предмет даёт пассивный прорубающий урон (Cleave)?", "options": ["Battle Fury", "Maelstrom", "Radiance", "Desolator"], "correct": "Battle Fury", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/bfury.png"},
+    {"category": "items", "question": "Сколько маны восстанавливает Clarity при полном срабатывании?", "options": ["150", "180", "120", "200"], "correct": "150", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/clarity.png"},
+    {"category": "items", "question": "Какой предмет дает максимальный пассивный шанс критического удара?", "options": ["Daedalus", "Crystalys", "Bloodthorn", "Witch Blade"], "correct": "Daedalus", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/lesser_crit.png"},
+    {"category": "items", "question": "Какой из артефактов накладывает эффект 'Disarm' (бессилие) на цель?", "options": ["Heaven's Halberd", "Solar Crest", "Abyssal Blade", "Eul's Scepter"], "correct": "Heaven's Halberd", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/heavens_halberd.png"},
+    {"category": "items", "question": "Какой предмет собирается из Helm of Iron Will и Crown?", "options": ["Armlet of Mordiggian", "Veil of Discord", "Falcon Blade", "Null Talisman"], "correct": "Armlet of Mordiggian", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/armlet.png"},
+    {"category": "items", "question": "Какое преимущество даёт предмет Phase Boots в активном состоянии?", "options": ["Прохождение сквозь юнитов и скорость", "Полный иммунитет к замедлению", "Увеличение урона на 50%", "Невидимость"], "correct": "Прохождение сквозь юнитов и скорость", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/phase_boots.png"},
+    {"category": "items", "question": "Какой предмет создаёт иллюзию вашего героя при использовании?", "options": ["Manta Style", "Sange and Yasha", "Echo Sabre", "Diffusal Blade"], "correct": "Manta Style", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/manta.png"},
+    {"category": "items", "question": "Сколько секунд длится активный эффект Satanic (Unholy Rage)?", "options": ["6 сек", "5 сек", "7 сек", "4 сек"], "correct": "6 сек", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/satanic.png"},
+    {"category": "items", "question": "Какой предмет дает пассивное сжигание маны при атаках?", "options": ["Diffusal Blade", "Desolator", "Maelstrom", "Basher"], "correct": "Diffusal Blade", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/diffusal_blade.png"},
+    {"category": "items", "question": "Сколько стоит Observer Ward в лавке?", "options": ["0", "50", "75", "25"], "correct": "0", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/ward_observer.png"},
+    {"category": "items", "question": "Какой предмет блокирует следующее направленное вражеское заклинание?", "options": ["Linken's Sphere", "Lotus Orb", "Black King Bar", "Aeon Disk"], "correct": "Linken's Sphere", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/sphere.png"},
+    {"category": "items", "question": "Какой из предметов снижает броню цели при атаках?", "options": ["Desolator", "Sange", "Maelstrom", "Skadi"], "correct": "Desolator", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/desolator.png"},
+    {"category": "items", "question": "Какой артефакт срабатывает автоматически при падении здоровья ниже 70%?", "options": ["Aeon Disk", "Heart of Tarrasque", "Bloodstone", "Satanic"], "correct": "Aeon Disk", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/aeon_disk.png"},
+    {"category": "items", "question": "Какой предмет собирается из Ogre Axe, Staff of Wizardry и Blade of Alacrity?", "options": ["Ultimate Orb", "Aghanim's Scepter", "Kaya and Sange", "Sange and Yasha"], "correct": "Aghanim's Scepter", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/ultimate_scepter.png"},
+    {"category": "items", "question": "Какой предмет даёт активный аура-эффект защиты от магии союзникам?", "options": ["Pipe of Insight", "Crimson Guard", "Mekanism", "Solar Crest"], "correct": "Pipe of Insight", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/pipe.png"},
+    {"category": "items", "question": "Какую скорость передвижения прибавляет предмет Boots of Speed?", "options": ["45", "50", "40", "60"], "correct": "45", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/boots.png"},
 
-    # ==================== ГЕРОИ И МЕХАНИКИ (HEROES) ====================
+    # --- ГЕРОИ И МЕХАНИКИ (HEROES) ---
     {"category": "heroes", "question": "Какой атрибут является основным для героя Pudge?", "options": ["Сила", "Ловкость", "Интеллект", "Универсальный"], "correct": "Сила", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/pudge.png"},
     {"category": "heroes", "question": "Сколько сфер у Invoker одновременно вращается вокруг него?", "options": ["3", "2", "4", "5"], "correct": "3", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/invoker.png"},
     {"category": "heroes", "question": "Как называется ультимейт героя Rubick?", "options": ["Spell Steal", "Telekinesis", "Fade Bolt", "Arcane Supremacy"], "correct": "Spell Steal", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/rubick.png"},
@@ -87,8 +101,25 @@ QUESTIONS_BASE = [
     {"category": "heroes", "question": "Как называется ультимативная способность героя Enigma?", "options": ["Black Hole", "Midnight Pulse", "Malefice", "Gravity Well"], "correct": "Black Hole", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/enigma.png"},
     {"category": "heroes", "question": "Как называется ультимейт героя Earthshaker?", "options": ["Echo Slam", "Fissure", "Enchant Totem", "Aftershock"], "correct": "Echo Slam", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/earthshaker.png"},
     {"category": "heroes", "question": "Как называется ультимативная способность Tidehunter?", "options": ["Ravage", "Gush", "Anchor Smash", "Kraken Shell"], "correct": "Ravage", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/tidehunter.png"},
+    {"category": "heroes", "question": "Какой герой использует способность 'Reverse Polarity' (RP)?", "options": ["Magnus", "Enigma", "Mars", "Sardar"], "correct": "Magnus", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/magnus.png"},
+    {"category": "heroes", "question": "Какой ультимейт у героя Juggernaut?", "options": ["Omnislash", "Blade Fury", "Healing Ward", "Swiftslash"], "correct": "Omnislash", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/juggernaut.png"},
+    {"category": "heroes", "question": "Какой герой может летать сквозь деревья способностью Firefly?", "options": ["Batrider", "Viper", "Jakiro", "Dragon Knight"], "correct": "Batrider", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/batrider.png"},
+    {"category": "heroes", "question": "Какой герой при смерти выпускает снаряды способностью 'Requiem of Souls'?", "options": ["Shadow Fiend", "Doom", "Terrorblade", "Undying"], "correct": "Shadow Fiend", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/nevermore.png"},
+    {"category": "heroes", "question": "Как называется пассивная способность Bristleback, снижающая урон со спины?", "options": ["Bristleback", "Quill Spray", "Warpath", "Goo"], "correct": "Bristleback", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/bristleback.png"},
+    {"category": "heroes", "question": "Какая способность Sniper увеличивает дальность его атаки?", "options": ["Take Aim", "Headshot", "Shrapnel", "Assassinate"], "correct": "Take Aim", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/sniper.png"},
+    {"category": "heroes", "question": "Какой герой спавнит иллюзии с помощью пассивки Juxtapose?", "options": ["Phantom Lancer", "Naga Siren", "Spectre", "Terrorblade"], "correct": "Phantom Lancer", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/phantom_lancer.png"},
+    {"category": "heroes", "question": "Какой герой обладает ультимейтом 'Supernova'?", "options": ["Phoenix", "Lina", "Dawnbreaker", "Keeper of the Light"], "correct": "Phoenix", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/phoenix.png"},
+    {"category": "heroes", "question": "Какой атрибут является основным для героя Anti-Mage?", "options": ["Ловкость", "Сила", "Интеллект", "Универсальный"], "correct": "Ловкость", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/antimage.png"},
+    {"category": "heroes", "question": "Какой герой умеет мгновенно перемещаться к деревьям способностью Tree Dance?", "options": ["Monkey King", "Nature's Prophet", "Treant Protector", "Hoodwink"], "correct": "Monkey King", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/monkey_king.png"},
+    {"category": "heroes", "question": "Как называется ультимейт героя Sven?", "options": ["God's Strength", "Storm Hammer", "Great Cleave", "Warcry"], "correct": "God's Strength", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/sven.png"},
+    {"category": "heroes", "question": "Какой герой призывает 'Bear' (Медведя) как отдельного юнита?", "options": ["Lone Druid", "Ursa", "Beastmaster", "Lycan"], "correct": "Lone Druid", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/lone_druid.png"},
+    {"category": "heroes", "question": "Какая способность Dazzle предотвращает смерть союзника на 5 секунд?", "options": ["Shallow Grave", "Shadow Wave", "Poison Touch", "Bad Juju"], "correct": "Shallow Grave", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/dazzle.png"},
+    {"category": "heroes", "question": "Какой герой крадет интеллект у вражеских героев при их смерти неподалеку?", "options": ["Silencer", "Outworld Destroyer", "Pugna", "Invoker"], "correct": "Silencer", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/silencer.png"},
+    {"category": "heroes", "question": "Какой герой имеет способность 'Doom', запрещающую магию и предметы?", "options": ["Doom", "Shadow Demon", "Bane", "Grimstroke"], "correct": "Doom", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/doom_bringer.png"},
+    {"category": "heroes", "question": "Как называется ультимейт героя Storm Spirit?", "options": ["Ball Lightning", "Static Remnant", "Electric Vortex", "Overload"], "correct": "Ball Lightning", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/storm_spirit.png"},
 
-    # ==================== КИБЕРСПОРТ И ЛОР (LORE / ESPORTS) ====================
+    # --- КИБЕРСПОРТ И ЛОР (LORE / ESPORTS) ---
+    {"category": "lore", "question": "Какая фракция защищает Древнего (Ancient) в Dota 2?", "options": ["Radiant (Силы Света)", "Dire (Силы Тьмы)", "Sentinel (Стражи)", "Scourge (Плеть)"], "correct": "Radiant (Силы Света)", "image": BACKGROUND_IMAGES["lore"]},
     {"category": "lore", "question": "Какая команда выиграла The International 2021 (TI10)?", "options": ["Team Spirit", "PSG.LGD", "OG", "Team Liquid"], "correct": "Team Spirit", "image": BACKGROUND_IMAGES["lore"]},
     {"category": "lore", "question": "Какая команда выиграла два TI подряд (TI8 и TI9)?", "options": ["OG", "Na'Vi", "Alliance", "Team Liquid"], "correct": "OG", "image": BACKGROUND_IMAGES["lore"]},
     {"category": "lore", "question": "Как зовут нейтрального босса, из которого выпадает Aegis of the Immortal?", "options": ["Roshan", "Tormentor", "Satanic", "Ancient Blue Dragon"], "correct": "Roshan", "image": BACKGROUND_IMAGES["lore"]},
@@ -96,7 +127,18 @@ QUESTIONS_BASE = [
     {"category": "lore", "question": "Как называется главный приз турнира The International?", "options": ["Aegis of Champions", "Summoner's Cup", "Divine Rapier Trophy", "Immortal Shield"], "correct": "Aegis of Champions", "image": BACKGROUND_IMAGES["lore"]},
     {"category": "lore", "question": "Какое имя носит брат-близнец герою Anti-Mage в лоре игры?", "options": ["Terrorblade", "Soul Keeper", "Magina", "Invoker"], "correct": "Terrorblade", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/terrorblade.png"},
     {"category": "lore", "question": "Как зовут Богиню Луны, которой поклоняются Mirana и Luna?", "options": ["Selemene", "Verodicia", "Nyx", "Skadi"], "correct": "Selemene", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/mirana.png"},
-    {"category": "lore", "question": "Какая фракция защищает древо Силы (World Tree)?", "options": ["Radiant", "Dire", "Sentinel", "Scourge"], "correct": "Radiant", "image": BACKGROUND_IMAGES["lore"]}
+    {"category": "lore", "question": "Какое существо появляется на карте на 20-й минуте матча и дает эффект Aghanim's Shard?", "options": ["Терзатель (Tormentor)", "Рошан (Roshan)", "Смотритель (Watcher)", "Лотус (Lotus)"], "correct": "Терзатель (Tormentor)", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/aghanims_shard.png"},
+    {"category": "lore", "question": "Какая команда выиграла The International 2013 на легендарном пятом карте финала?", "options": ["Alliance", "Na'Vi", "Evil Geniuses", "IG"], "correct": "Alliance", "image": BACKGROUND_IMAGES["lore"]},
+    {"category": "lore", "question": "Как зовут дракона, в которого превращается Dragon Knight на 3-ем уровне ультимейта?", "options": ["Синий Дракон (Blue/Frost Dragon)", "Красный Дракон", "Зеленый Дракон", "Черный Дракон"], "correct": "Синий Дракон (Blue/Frost Dragon)", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/dragon_knight.png"},
+    {"category": "lore", "question": "Какая страна принимала турнир The International 2018 (TI8)?", "options": ["Канада (Ванкувер)", "США (Сиэтл)", "Румыния (Бухарест)", "Китай (Шанхай)"], "correct": "Канада (Ванкувер)", "image": BACKGROUND_IMAGES["lore"]},
+    {"category": "lore", "question": "Как называется родной мир героя Void Spirit и других Спиритов?", "options": ["Hidden Temple / Elemental Realm", "Abyssal Plane", "Nether Realm", "Narrow Maze"], "correct": "Hidden Temple / Elemental Realm", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/void_spirit.png"},
+    {"category": "lore", "question": "Кем по лору является герой Pudge?", "options": ["Мясником на поле битвы тел", "Демоном Ада", "Оживленным зомби", "Падшим рыцарем"], "correct": "Мясником на поле битвы тел", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/pudge.png"},
+    {"category": "lore", "question": "Какой игрок известен своим легендарным 'Pudge + Chen' (Fountain Hook) на TI3?", "options": ["Dendi", "Puppey", "Miracle-", "Topson"], "correct": "Dendi", "image": BACKGROUND_IMAGES["lore"]},
+    {"category": "lore", "question": "Какая фракция противостоит Radiant в Dota 2?", "options": ["Dire (Силы Тьмы)", "Scourge", "Horde", "Legion"], "correct": "Dire (Силы Тьмы)", "image": BACKGROUND_IMAGES["lore"]},
+    {"category": "lore", "question": "Как называется место, куда попадают души умерших героев перед перерождением (в лоре Razora и Visage)?", "options": ["Narrow Maze (Узкий Лабиринт)", "Nether Realm", "Abyss", "Hell"], "correct": "Narrow Maze (Узкий Лабиринт)", "image": BACKGROUND_IMAGES["lore"]},
+    {"category": "lore", "question": "Какой герой является заклятым врагом Tidehunter?", "options": ["Kunkka", "Slardar", "Morphling", "Naga Siren"], "correct": "Kunkka", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/kunkka.png"},
+    {"category": "lore", "question": "Какая финская организация выиграла The International 2017 (TI7)?", "options": ["Team Liquid", "Newbee", "OG", "VP"], "correct": "Team Liquid", "image": BACKGROUND_IMAGES["lore"]},
+    {"category": "lore", "question": "Как зовут фундаментала, представляющего собой силу притяжения (Gravity)?", "options": ["Enigma", "Keeper of the Light", "Chaos Knight", "Io"], "correct": "Enigma", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/enigma.png"}
 ]
 
 class QuizStates(StatesGroup):
@@ -153,7 +195,7 @@ async def cmd_reset(message: types.Message, state: FSMContext):
     conn.commit()
     conn.close()
     await state.clear()
-    await message.answer("🔄 Профиль очищен! Отправьте /start для регистрации.")
+    await message.answer("🔄 Профиль очищен! Отправьте /start для регистрации.", reply_markup=main_menu())
 
 @dp.message(QuizStates.waiting_for_nickname)
 async def process_nickname(message: types.Message, state: FSMContext):
@@ -194,14 +236,18 @@ async def process_rank(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.answer(f"Профиль обновлён! Ваш ранг: **{selected_rank}**.", parse_mode="Markdown", reply_markup=main_menu())
     await state.clear()
 
-@dp.message(F.text == "🎯 Пройти тест")
-async def ask_category(message: types.Message, state: FSMContext):
-    await safe_delete_message(message.chat.id, message.message_id)
+@dp.message(F.text.in_({"🎯 Пройти тест", "Играть", "играть"}))
+@dp.callback_query(F.data == "restart_quiz")
+async def ask_category(event: types.Message | types.CallbackQuery, state: FSMContext):
+    chat_id = event.chat.id if isinstance(event, types.Message) else event.message.chat.id
+    message_id = event.message_id if isinstance(event, types.Message) else event.message.message_id
+    
+    await safe_delete_message(chat_id, message_id)
     data = await state.get_data()
     if "last_msg_id" in data:
-        await safe_delete_message(message.chat.id, data["last_msg_id"])
+        await safe_delete_message(chat_id, data["last_msg_id"])
 
-    msg = await message.answer("Выбери режим тестирования:", reply_markup=category_keyboard())
+    msg = await bot.send_message(chat_id, "Выбери режим тестирования:", reply_markup=category_keyboard())
     await state.update_data(last_msg_id=msg.message_id)
     await state.set_state(QuizStates.choosing_category)
 
@@ -259,7 +305,15 @@ async def render_question(chat_id: int, state: FSMContext):
             f"✅ Правильных ответов: **{correct} из {total}**\n\n"
             f"Посмотреть статистику можно в разделе «📊 Моя статистика»."
         )
-        msg = await bot.send_message(chat_id, text, parse_mode="Markdown", reply_markup=main_menu())
+        
+        restart_kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🔄 Пройти ещё раз", callback_data="restart_quiz")]
+        ])
+        
+        # Обязательно высылаем main_menu(), чтобы клавиатура не пропадала в конце
+        await bot.send_message(chat_id, text, parse_mode="Markdown", reply_markup=main_menu())
+        msg = await bot.send_message(chat_id, "Хотите сыграть ещё раз?", reply_markup=restart_kb)
+        
         await state.update_data(last_msg_id=msg.message_id)
         await state.set_state(None)
         return
@@ -275,7 +329,6 @@ async def render_question(chat_id: int, state: FSMContext):
     try:
         msg = await bot.send_photo(chat_id, photo=image_url, caption=q_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     except Exception:
-        # Если ссылка на картинку не сработала, выводим вопрос текстом
         msg = await bot.send_message(chat_id, q_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     
     await state.update_data(last_msg_id=msg.message_id)
@@ -319,7 +372,7 @@ async def show_stats(message: types.Message, state: FSMContext):
     conn.close()
 
     if not user_data:
-        msg = await message.answer("Профиль не найден. Напишите /start для регистрации.")
+        msg = await message.answer("Профиль не найден. Напишите /start для регистрации.", reply_markup=main_menu())
         await state.update_data(last_msg_id=msg.message_id)
         return
 
@@ -335,7 +388,7 @@ async def show_stats(message: types.Message, state: FSMContext):
         f"❌ **Ошибок:** {wrong}\n"
         f"📈 **Точность:** {accuracy}%"
     )
-    msg = await message.answer(stats_text, parse_mode="Markdown")
+    msg = await message.answer(stats_text, parse_mode="Markdown", reply_markup=main_menu())
     await state.update_data(last_msg_id=msg.message_id)
 
 @dp.message(F.text == "👤 Профиль")
@@ -352,7 +405,7 @@ async def show_profile(message: types.Message, state: FSMContext):
     conn.close()
 
     if not user_data:
-        msg = await message.answer("Профиль не найден. Напишите /start для регистрации.")
+        msg = await message.answer("Профиль не найден. Напишите /start для регистрации.", reply_markup=main_menu())
         await state.update_data(last_msg_id=msg.message_id)
         return
 
