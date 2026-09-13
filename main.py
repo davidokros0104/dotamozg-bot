@@ -17,7 +17,8 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 
-QUESTIONS_PER_QUIZ = 10
+# 12 вопросов за сессию (4 блока по 3 вопроса)
+QUESTIONS_PER_QUIZ = 12
 
 def init_db():
     conn = sqlite3.connect("dotamozg.db")
@@ -38,107 +39,29 @@ def init_db():
 init_db()
 
 QUESTIONS_BASE = [
-    # --- КАТЕГОРИЯ: Предметы ---
-    {
-        "category": "items",
-        "question": "Какой предмет даёт полный иммунитет к заклинаниям на время действия?",
-        "options": ["Black King Bar", "Linken's Sphere", "Lotus Orb", "Pipe of Insight"],
-        "correct": "Black King Bar"
-    },
-    {
-        "category": "items",
-        "question": "Какой предмет собирается из Blink Dagger и Reaver?",
-        "options": ["Overwhelming Blink", "Swift Blink", "Arcane Blink", "Wind Waker"],
-        "correct": "Overwhelming Blink"
-    },
-    {
-        "category": "items",
-        "question": "Сколько стоит рецепт для сборки Hand of Midas?",
-        "options": ["1750", "1500", "1400", "2200"],
-        "correct": "1750"
-    },
-    {
-        "category": "items",
-        "question": "Какой предмет даёт эффект 'True Sight' вокруг владельца?",
-        "options": ["Dust of Appearance", "Sentry Ward", "Gem of True Sight", "Shadow Blade"],
-        "correct": "Gem of True Sight"
-    },
-    {
-        "category": "items",
-        "question": "Какое максимальное число зарядов может хранить Magic Wand?",
-        "options": ["10", "15", "20", "25"],
-        "correct": "20"
-    },
-    {
-        "category": "items",
-        "question": "Какой предмет даёт способность пассивно наносить урон вокруг себя огнём?",
-        "options": ["Radiance", "Shiva's Guard", "Maelstrom", "Battle Fury"],
-        "correct": "Radiance"
-    },
+    # --- БЛОК 1: Предметы ---
+    {"category": "items", "question": "Какой предмет даёт полный иммунитет к заклинаниям на время действия?", "options": ["Black King Bar", "Linken's Sphere", "Lotus Orb", "Pipe of Insight"], "correct": "Black King Bar"},
+    {"category": "items", "question": "Какой предмет собирается из Blink Dagger и Reaver?", "options": ["Overwhelming Blink", "Swift Blink", "Arcane Blink", "Wind Waker"], "correct": "Overwhelming Blink"},
+    {"category": "items", "question": "Сколько стоит рецепт для сборки Hand of Midas?", "options": ["1750", "1500", "1400", "2200"], "correct": "1750"},
+    {"category": "items", "question": "Какой предмет даёт эффект 'True Sight' вокруг владельца?", "options": ["Dust of Appearance", "Sentry Ward", "Gem of True Sight", "Shadow Blade"], "correct": "Gem of True Sight"},
 
-    # --- КАТЕГОРИЯ: Герои и Механики ---
-    {
-        "category": "heroes",
-        "question": "Какой атрибут является основным для героя Pudge?",
-        "options": ["Ловкость", "Сила", "Интеллект", "Универсальный"],
-        "correct": "Сила"
-    },
-    {
-        "category": "heroes",
-        "question": "Сколько сфер у Invoker одновременно вращается вокруг него?",
-        "options": ["2", "3", "4", "5"],
-        "correct": "3"
-    },
-    {
-        "category": "heroes",
-        "question": "Как называется ультимейт героя Rubick?",
-        "options": ["Spell Steal", "Telekinesis", "Fade Bolt", "Arcane Supremacy"],
-        "correct": "Spell Steal"
-    },
-    {
-        "category": "heroes",
-        "question": "Какой атрибут был добавлен в Dota 2 в обновлении 7.33?",
-        "options": ["Магия", "Универсальный", "Стойкость", "Мудрость"],
-        "correct": "Универсальный"
-    },
-    {
-        "category": "heroes",
-        "question": "Какой герой создает полноценные копии себя способностью Divided We Stand?",
-        "options": ["Phantom Lancer", "Naga Siren", "Meepo", "Chaos Knight"],
-        "correct": "Meepo"
-    },
-    {
-        "category": "heroes",
-        "question": "Какой герой произносит знаменитую фразу 'Fresh meat!'?",
-        "options": ["Lifestealer", "Pudge", "Doom", "Night Stalker"],
-        "correct": "Pudge"
-    },
+    # --- БЛОК 2: Герои и Механики ---
+    {"category": "heroes", "question": "Какой атрибут является основным для героя Pudge?", "options": ["Ловкость", "Сила", "Интеллект", "Универсальный"], "correct": "Сила"},
+    {"category": "heroes", "question": "Сколько сфер у Invoker одновременно вращается вокруг него?", "options": ["2", "3", "4", "5"], "correct": "3"},
+    {"category": "heroes", "question": "Как называется ультимейт героя Rubick?", "options": ["Spell Steal", "Telekinesis", "Fade Bolt", "Arcane Supremacy"], "correct": "Spell Steal"},
+    {"category": "heroes", "question": "Какой герой создает полноценные копии себя способностью Divided We Stand?", "options": ["Phantom Lancer", "Naga Siren", "Meepo", "Chaos Knight"], "correct": "Meepo"},
 
-    # --- КАТЕГОРИЯ: Киберспорт и Лор ---
-    {
-        "category": "lore",
-        "question": "Какая команда выиграла The International 2021 (TI10)?",
-        "options": ["PSG.LGD", "OG", "Team Spirit", "Team Liquid"],
-        "correct": "Team Spirit"
-    },
-    {
-        "category": "lore",
-        "question": "Какая команда выиграла два TI подряд (TI8 и TI9)?",
-        "options": ["Na'Vi", "OG", "Alliance", "Team Liquid"],
-        "correct": "OG"
-    },
-    {
-        "category": "lore",
-        "question": "Как зовут нейтрального босса, из которого выпадает Aegis of the Immortal?",
-        "options": ["Tormentor", "Roshan", "Satanic", "Ancient Blue Dragon"],
-        "correct": "Roshan"
-    },
-    {
-        "category": "lore",
-        "question": "Кто выиграл самый первый The International (TI1) в 2011 году?",
-        "options": ["Natus Vincere (Na'Vi)", "EHOME", "Invictus Gaming", "Alliance"],
-        "correct": "Natus Vincere (Na'Vi)"
-    }
+    # --- БЛОК 3: Киберспорт и Лор ---
+    {"category": "lore", "question": "Какая команда выиграла The International 2021 (TI10)?", "options": ["PSG.LGD", "OG", "Team Spirit", "Team Liquid"], "correct": "Team Spirit"},
+    {"category": "lore", "question": "Какая команда выиграла два TI подряд (TI8 и TI9)?", "options": ["Na'Vi", "OG", "Alliance", "Team Liquid"], "correct": "OG"},
+    {"category": "lore", "question": "Как зовут нейтрального босса, из которого выпадает Aegis of the Immortal?", "options": ["Tormentor", "Roshan", "Satanic", "Ancient Blue Dragon"], "correct": "Roshan"},
+    {"category": "lore", "question": "Кто выиграл самый первый The International (TI1) в 2011 году?", "options": ["Natus Vincere (Na'Vi)", "EHOME", "Invictus Gaming", "Alliance"], "correct": "Natus Vincere (Na'Vi)"},
+
+    # --- БЛОК 4: Сложный микс ---
+    {"category": "mix", "question": "Какой предмет перезаряжает все способности и предметы героя?", "options": ["Refresher Orb", "Scythe of Vyse", "Octarine Core", "Bloodstone"], "correct": "Refresher Orb"},
+    {"category": "mix", "question": "Какой предмет выпадает из Торментора (Tormentor)?", "options": ["Aghanim's Shard", "Aegis", "Cheese", "Refresher Shard"], "correct": "Aghanim's Shard"},
+    {"category": "mix", "question": "Какое максимальное число зарядов может хранить Magic Wand?", "options": ["20", "15", "10", "25"], "correct": "20"},
+    {"category": "mix", "question": "Какой герой произносит знаменитую фразу 'Fresh meat!'?", "options": ["Pudge", "Lifestealer", "Doom", "Night Stalker"], "correct": "Pudge"}
 ]
 
 class QuizStates(StatesGroup):
@@ -157,10 +80,10 @@ def main_menu():
 
 def category_keyboard():
     kb = [
-        [InlineKeyboardButton(text="🗡 Предметы", callback_data="cat_items")],
-        [InlineKeyboardButton(text="🧙‍♂️ Герои и Механики", callback_data="cat_heroes")],
-        [InlineKeyboardButton(text="🏆 Киберспорт и Лор", callback_data="cat_lore")],
-        [InlineKeyboardButton(text="🎲 Все категории (Микс)", callback_data="cat_all")]
+        [InlineKeyboardButton(text="🎲 Играть 12 вопросов (4 блока по 3)", callback_data="cat_all")],
+        [InlineKeyboardButton(text="🗡 Только Предметы", callback_data="cat_items")],
+        [InlineKeyboardButton(text="🧙‍♂️ Только Герои", callback_data="cat_heroes")],
+        [InlineKeyboardButton(text="🏆 Только Киберспорт/Лор", callback_data="cat_lore")]
     ]
     return InlineKeyboardMarkup(inline_keyboard=kb)
 
@@ -196,7 +119,8 @@ async def process_nickname(message: types.Message, state: FSMContext):
 async def process_rank(callback: types.CallbackQuery, state: FSMContext):
     selected_rank = callback.data.split("_")[1]
     data = await state.get_data()
-    nickname = data.get("nickname")
+    
+    nickname = data.get("nickname") or callback.from_user.first_name or "Игрок"
 
     conn = sqlite3.connect("dotamozg.db")
     cursor = conn.cursor()
@@ -212,7 +136,7 @@ async def process_rank(callback: types.CallbackQuery, state: FSMContext):
 
 @dp.message(F.text == "🎮 Начать викторину")
 async def ask_category(message: types.Message, state: FSMContext):
-    await message.answer("Выбери категорию вопросов:", reply_markup=category_keyboard())
+    await message.answer("Выбери режим игры:", reply_markup=category_keyboard())
     await state.set_state(QuizStates.choosing_category)
 
 @dp.callback_query(F.data.startswith("cat_"), QuizStates.choosing_category)
@@ -220,12 +144,21 @@ async def start_quiz_category(callback: types.CallbackQuery, state: FSMContext):
     cat = callback.data.replace("cat_", "")
     
     if cat == "all":
-        pool = QUESTIONS_BASE
+        # Формируем 4 блока по 3 вопроса = 12 вопросов
+        items = [q for q in QUESTIONS_BASE if q.get("category") == "items"]
+        heroes = [q for q in QUESTIONS_BASE if q.get("category") == "heroes"]
+        lore = [q for q in QUESTIONS_BASE if q.get("category") == "lore"]
+        mix = [q for q in QUESTIONS_BASE if q.get("category") == "mix"]
+
+        block1 = random.sample(items, min(3, len(items)))
+        block2 = random.sample(heroes, min(3, len(heroes)))
+        block3 = random.sample(lore, min(3, len(lore)))
+        block4 = random.sample(mix, min(3, len(mix)))
+
+        selected_questions = block1 + block2 + block3 + block4
     else:
         pool = [q for q in QUESTIONS_BASE if q.get("category") == cat]
-
-    count = min(QUESTIONS_PER_QUIZ, len(pool))
-    selected_questions = random.sample(pool, count)
+        selected_questions = random.sample(pool, min(12, len(pool)))
 
     await state.set_state(QuizStates.in_quiz)
     await state.update_data(
@@ -235,10 +168,9 @@ async def start_quiz_category(callback: types.CallbackQuery, state: FSMContext):
         wrong_count=0
     )
     
-    # Запускаем первичное сообщение викторины
-    await render_question(callback.message, state, is_first=True)
+    await render_question(callback.message, state)
 
-async def render_question(message: types.Message, state: FSMContext, is_first: bool = False):
+async def render_question(message: types.Message, state: FSMContext):
     data = await state.get_data()
     questions = data["questions"]
     index = data["current_index"]
@@ -270,12 +202,12 @@ async def render_question(message: types.Message, state: FSMContext, is_first: b
     random.shuffle(options)
 
     kb = [[InlineKeyboardButton(text=opt, callback_data=f"ans_{opt}")] for opt in options]
-    q_text = f"**Вопрос {index + 1} из {len(questions)}**\n\n{q['question']}"
+    
+    # Визуальное разделение на 4 блока
+    block_num = (index // 3) + 1
+    q_text = f"**Блок {block_num} | Вопрос {index + 1} из {len(questions)}**\n\n{q['question']}"
 
-    if is_first:
-        await message.edit_text(q_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
-    else:
-        await message.edit_text(q_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    await message.edit_text(q_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
 
 @dp.callback_query(F.data.startswith("ans_"), QuizStates.in_quiz)
 async def handle_answer(callback: types.CallbackQuery, state: FSMContext):
@@ -300,7 +232,7 @@ async def handle_answer(callback: types.CallbackQuery, state: FSMContext):
         wrong_count=wrong_count
     )
 
-    await render_question(callback.message, state, is_first=False)
+    await render_question(callback.message, state)
 
 @dp.message(F.text == "🏆 Моя доска почёта")
 async def show_stats(message: types.Message):
