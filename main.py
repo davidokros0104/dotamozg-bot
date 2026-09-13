@@ -42,7 +42,7 @@ def init_db():
 
 init_db()
 
-# ПОЛНАЯ БАЗА: 120+ ВОПРОСОВ (ПО 40+ В КАЖДОЙ КАТЕГОРИИ)
+# БАЗА 120+ ВОПРОСОВ
 QUESTIONS_BASE = [
     # --- ПРЕДМЕТЫ (ITEMS) ---
     {"category": "items", "question": "Какой предмет даёт полный иммунитет к магии на время действия?", "options": ["Black King Bar", "Linken's Sphere", "Lotus Orb", "Pipe of Insight"], "correct": "Black King Bar", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/black_king_bar.png"},
@@ -111,7 +111,7 @@ QUESTIONS_BASE = [
     {"category": "heroes", "question": "Какой герой обладает ультимейтом 'Supernova'?", "options": ["Phoenix", "Lina", "Dawnbreaker", "Keeper of the Light"], "correct": "Phoenix", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/phoenix.png"},
     {"category": "heroes", "question": "Какой атрибут является основным для героя Anti-Mage?", "options": ["Ловкость", "Сила", "Интеллект", "Универсальный"], "correct": "Ловкость", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/antimage.png"},
     {"category": "heroes", "question": "Какой герой умеет мгновенно перемещаться к деревьям способностью Tree Dance?", "options": ["Monkey King", "Nature's Prophet", "Treant Protector", "Hoodwink"], "correct": "Monkey King", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/monkey_king.png"},
-    {"category": "heroes", "question": "Как называется ультимейт героя Sven?", "options": ["God's Strength", "Storm Hammer", "Great Cleave", "Warcry"], "correct": "God's Strength", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/sven.png"},
+    {"category": "heroes", "question": "Как называется ультимейт героя Sven?", "options": ["God's Strength", "Storm Hammer", "Great Cleave", "Warcry"], "correct": "Sven", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/sven.png"},
     {"category": "heroes", "question": "Какой герой призывает 'Bear' (Медведя) как отдельного юнита?", "options": ["Lone Druid", "Ursa", "Beastmaster", "Lycan"], "correct": "Lone Druid", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/lone_druid.png"},
     {"category": "heroes", "question": "Какая способность Dazzle предотвращает смерть союзника на 5 секунд?", "options": ["Shallow Grave", "Shadow Wave", "Poison Touch", "Bad Juju"], "correct": "Shallow Grave", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/dazzle.png"},
     {"category": "heroes", "question": "Какой герой крадет интеллект у вражеских героев при их смерти неподалеку?", "options": ["Silencer", "Outworld Destroyer", "Pugna", "Invoker"], "correct": "Silencer", "image": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/silencer.png"},
@@ -164,11 +164,17 @@ def category_keyboard():
     ]
     return InlineKeyboardMarkup(inline_keyboard=kb)
 
+# ЕДИНСТВЕННОЕ ОБНОВЛЕННОЕ МЕСТО: ЭФФЕКТ СВОРАЧИВАНИЯ СООБЩЕНИЙ
 async def safe_delete_message(chat_id: int, message_id: int):
     try:
+        await bot.edit_message_text(chat_id=chat_id, message_id=message_id, text="⏳")
+        await asyncio.sleep(0.2)
         await bot.delete_message(chat_id=chat_id, message_id=message_id)
     except Exception:
-        pass
+        try:
+            await bot.delete_message(chat_id=chat_id, message_id=message_id)
+        except Exception:
+            pass
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message, state: FSMContext):
@@ -310,7 +316,6 @@ async def render_question(chat_id: int, state: FSMContext):
             [InlineKeyboardButton(text="🔄 Пройти ещё раз", callback_data="restart_quiz")]
         ])
         
-        # Обязательно высылаем main_menu(), чтобы клавиатура не пропадала в конце
         await bot.send_message(chat_id, text, parse_mode="Markdown", reply_markup=main_menu())
         msg = await bot.send_message(chat_id, "Хотите сыграть ещё раз?", reply_markup=restart_kb)
         
