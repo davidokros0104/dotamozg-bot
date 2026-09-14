@@ -162,20 +162,21 @@ async def ask_category(event: types.Message | types.CallbackQuery, state: FSMCon
     await state.update_data(last_msg_id=msg.message_id)
     await state.set_state(QuizStates.choosing_category)
 
-@dp.callback_query(F.data.startswith("cat_"), QuizStates.choosing_category)
+ @dp.callback_query(F.data.startswith("cat_"), QuizStates.choosing_category)
 async def start_quiz_category(callback: types.CallbackQuery, state: FSMContext):
-            cat = callback.data.replace("cat_", "")
-        
-        if cat == "all":
-            pool = QUESTIONS_BASE.copy()
-        elif cat == "heroes":
-            pool = [q for q in QUESTIONS_BASE if q.get("category") in ["heroes", "hero"]]
-        elif cat == "items":
-            pool = [q for q in QUESTIONS_BASE if q.get("category") in ["items", "item"]]
-        elif cat == "lore":
-            pool = [q for q in QUESTIONS_BASE if q.get("category") in ["lore", "general"]]
-        else:
-            pool = QUESTIONS_BASE.copy()
+    cat = callback.data.replace("cat_", "")
+
+    if cat == "all":
+        pool = QUESTIONS_BASE.copy()
+    elif cat == "heroes":
+        pool = [q for q in QUESTIONS_BASE if q.get("category") in ["heroes", "hero"]]
+    elif cat == "items":
+        pool = [q for q in QUESTIONS_BASE if q.get("category") in ["items", "item"]]
+    elif cat == "lore":
+        pool = [q for q in QUESTIONS_BASE if q.get("category") in ["lore", "general"]]
+    else:
+        pool = QUESTIONS_BASE.copy()
+       
 
 
     random.shuffle(pool)
