@@ -12,6 +12,8 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 
+from questions import QUESTIONS_BASE
+
 API_TOKEN = os.getenv("BOT_TOKEN")
 
 logging.basicConfig(level=logging.INFO)
@@ -43,9 +45,6 @@ def init_db():
 
 init_db()
 
-
-
-
 class QuizStates(StatesGroup):
     waiting_for_nickname = State()
     waiting_for_rank = State()
@@ -64,15 +63,14 @@ def category_keyboard():
     kb = [
         [InlineKeyboardButton(text="🎯 Микс (Всё подряд)", callback_data="cat_all")],
         [InlineKeyboardButton(text="🗡 Предметы", callback_data="cat_items")],
-        [InlineKeyboardButton(text="🛡 Герои и Механики", callback_data="cat_heroes")],
-        [InlineKeyboardButton(text="🏆 Киберспорт и Лор", callback_data="cat_lore")]
+        [InlineKeyboardButton(text="🦸 Герои и Механики", callback_data="cat_heroes")],
+        [InlineKeyboardButton(text="📜 Киберспорт и Лор", callback_data="cat_lore")]
     ]
     return InlineKeyboardMarkup(inline_keyboard=kb)
 
-# ЕДИНСТВЕННОЕ ОБНОВЛЕННОЕ МЕСТО: ЭФФЕКТ СВОРАЧИВАНИЯ СООБЩЕНИЙ
 async def safe_delete_message(chat_id: int, message_id: int):
     try:
-        await bot.edit_message_text(chat_id=chat_id, message_id=message_id, text="⌛")
+        await bot.edit_message_text(chat_id=chat_id, message_id=message_id, text="⏳")
         await asyncio.sleep(0.2)
         await bot.delete_message(chat_id=chat_id, message_id=message_id)
     except Exception:
@@ -91,7 +89,7 @@ async def cmd_start(message: types.Message, state: FSMContext):
     conn.close()
 
     if not user:
-        msg = await message.answer("Привет! Добро пожаловать в «ДотаМозг»! 🧠\n\nВведи свой игровой никнейм:")
+        msg = await message.answer("Привет! Добро пожаловать в «ДотаМозг»! ❤️\n\nВведи свой игровой никнейм:")
         await state.update_data(last_msg_id=msg.message_id)
         await state.set_state(QuizStates.waiting_for_nickname)
     else:
@@ -124,7 +122,7 @@ async def process_nickname(message: types.Message, state: FSMContext):
             row.append(InlineKeyboardButton(text=ranks[i+1], callback_data=f"rank_{ranks[i+1]}"))
         kb.append(row)
 
-    msg = await message.answer("Выбери свой текущий ранг в Dota 2:", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    msg = await message.answer("Выбери твой текущий ранг в Dota 2:", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     await state.update_data(last_msg_id=msg.message_id)
     await state.set_state(QuizStates.waiting_for_rank)
 
@@ -144,7 +142,7 @@ async def process_rank(callback: types.CallbackQuery, state: FSMContext):
     conn.close()
 
     await safe_delete_message(callback.message.chat.id, callback.message.message_id)
-    await callback.message.answer(f"Профиль обновлён! Ваш ранг: **{selected_rank}**.", parse_mode="Markdown", reply_markup=main_menu())
+    await callback.message.answer(f"Профиль обновлен! Ваш ранг: **{selected_rank}**.", parse_mode="Markdown", reply_markup=main_menu())
     await state.clear()
 
 @dp.message(F.text.in_(["📝 Пройти тест", "Играть", "играть"]))
@@ -162,7 +160,7 @@ async def ask_category(event: types.Message | types.CallbackQuery, state: FSMCon
     await state.update_data(last_msg_id=msg.message_id)
     await state.set_state(QuizStates.choosing_category)
 
- @dp.callback_query(F.data.startswith("cat_"), QuizStates.choosing_category)
+@dp.callback_query(F.data.startswith("cat_"), QuizStates.choosing_category)
 async def start_quiz_category(callback: types.CallbackQuery, state: FSMContext):
     cat = callback.data.replace("cat_", "")
 
@@ -176,8 +174,6 @@ async def start_quiz_category(callback: types.CallbackQuery, state: FSMContext):
         pool = [q for q in QUESTIONS_BASE if q.get("category") in ["lore", "general"]]
     else:
         pool = QUESTIONS_BASE.copy()
-       
-
 
     random.shuffle(pool)
     selected_questions = pool[:min(10, len(pool))]
@@ -210,7 +206,7 @@ async def render_question(chat_id: int, state: FSMContext):
         conn = sqlite3.connect("dotamozg.db")
         cursor = conn.cursor()
         cursor.execute("""
-            UPDATE users
+            UPDATE users 
             SET total_questions = total_questions + ?,
                 correct_answers = correct_answers + ?,
                 wrong_answers = wrong_answers + ?
@@ -219,157 +215,101 @@ async def render_question(chat_id: int, state: FSMContext):
         conn.commit()
         conn.close()
 
-        text = (
+        kb = [[InlineKeyboardButton(text="🔄 Играть снова", callback_data="restart_quiz")]]
+        msg = await bot.send_message(
+            chat_id,
             f"🎉 **Тест завершен!**\n\n"
-            f"🎯 Правильно ответов: **{correct}** из {total}!\n\n"
-            f"📊 Посмотреть статистику можно в разделе 📊 Моя статистика."
+            f"✅ Правильно: {correct}\n"
+            f"❌ Ошибок: {wrong}\n"
+            f"📊 Итог: {correct}/{total}",
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=kb)
         )
-
-        restart_kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🔄 Пройти еще раз", callback_data="restart_quiz")]
-        ])
-
-        await bot.send_message(chat_id, text, parse_mode="Markdown", reply_markup=main_menu())
-        msg = await bot.send_message(chat_id, "Хотите сыграть еще раз?", reply_markup=restart_kb)
-        
-        await state.update_data(last_msg_id=msg.message_id)
-        await state.set_state(None)
+        await state.clear()
         return
 
     q = questions[index]
-    options = q["options"][:]
-    random.shuffle(options)
+    text = f"❓ **Вопрос {index + 1}/{len(questions)}**\n\n{q['question']}"
+    kb = []
+    for idx, option in enumerate(q['options']):
+        kb.append([InlineKeyboardButton(text=option, callback_data=f"ans_{idx}")])
 
-    kb = [[InlineKeyboardButton(text=opt, callback_data=f"ans_{opt}")] for opt in options]
-    q_text = f"**Вопрос {index + 1} из {len(questions)}**\n\n{q['question']}"
-    image_url = q.get("image") or BACKGROUND_IMAGES.get(q.get("category"), BACKGROUND_IMAGES["general"])
-
-    try:
-        msg = await bot.send_photo(chat_id, photo=image_url, caption=q_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
-    except Exception:
-        msg = await bot.send_message(chat_id, q_text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
-
+    msg = await bot.send_message(chat_id, text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
     await state.update_data(last_msg_id=msg.message_id)
 
 @dp.callback_query(F.data.startswith("ans_"), QuizStates.in_quiz)
-async def handle_answer(callback: types.CallbackQuery, state: FSMContext):
-    user_ans = callback.data.replace("ans_", "")
+async def process_answer(callback: types.CallbackQuery, state: FSMContext):
+    ans_idx = int(callback.data.split("_")[1])
     data = await state.get_data()
     questions = data["questions"]
     index = data["current_index"]
     q = questions[index]
 
-    if user_ans == q["correct"]:
+    if ans_idx == q["correct"]:
+        await state.update_data(correct_count=data["correct_count"] + 1)
         await callback.answer("✅ Правильно!", show_alert=False)
-        correct_count = data["correct_count"] + 1
-        wrong_count = data["wrong_count"]
     else:
-        await callback.answer(f"❌ Неверно! Ответ: {q['correct']}", show_alert=False)
-        correct_count = data["correct_count"]
-        wrong_count = data["wrong_count"] + 1
+        await state.update_data(wrong_count=data["wrong_count"] + 1)
+        correct_text = q['options'][q['correct']]
+        await callback.answer(f"❌ Ошибка! Правильный ответ: {correct_text}", show_alert=True)
 
-    await state.update_data(
-        current_index=index + 1,
-        correct_count=correct_count,
-        wrong_count=wrong_count
-    )
-
+    await state.update_data(current_index=index + 1)
     await render_question(callback.message.chat.id, state)
 
 @dp.message(F.text == "📊 Моя статистика")
-async def show_stats(message: types.Message, state: FSMContext):
+async def show_stats(message: types.Message):
     await safe_delete_message(message.chat.id, message.message_id)
-    data = await state.get_data()
-    if "last_msg_id" in data:
-        await safe_delete_message(message.chat.id, data["last_msg_id"])
-
     conn = sqlite3.connect("dotamozg.db")
     cursor = conn.cursor()
     cursor.execute("SELECT nickname, rank, total_questions, correct_answers, wrong_answers FROM users WHERE user_id = ?", (message.from_user.id,))
-    user_data = cursor.fetchone()
+    user = cursor.fetchone()
     conn.close()
 
-    if not user_data:
-        msg = await message.answer("Профиль не найден. Нажмите /start для регистрации.", reply_markup=main_menu())
-        await state.update_data(last_msg_id=msg.message_id)
+    if not user:
+        await message.answer("Сначала пройдите регистрацию через /start")
         return
 
-    nick, rank, total, correct, wrong = user_data
-    accuracy = round((correct / total * 100), 1) if total > 0 else 0
+    nickname, rank, total, correct, wrong = user
+    winrate = round((correct / total * 100), 1) if total > 0 else 0
 
-    stats_text = (
-        f"📊 **Личная статистика**\n\n"
-        f"👤 **Игрок:** {nick}\n"
-        f"🏆 **Ранг:** {rank}\n"
-        f"🎯 **Всего ответов:** {total}\n"
-        f"✅ **Правильных:** {correct}\n"
-        f"❌ **Ошибок:** {wrong}\n"
-        f"📈 **Точность:** {accuracy}%"
+    text = (
+        f"📊 **Статистика {nickname}**\n\n"
+        f"🏅 Ранг: {rank}\n"
+        f"📝 Всего вопросов: {total}\n"
+        f"✅ Правильных ответов: {correct}\n"
+        f"❌ Ошибок: {wrong}\n"
+        f"🎯 Точность: {winrate}%"
     )
-
-    msg = await message.answer(stats_text, parse_mode="Markdown", reply_markup=main_menu())
-    await state.update_data(last_msg_id=msg.message_id)
+    await message.answer(text, parse_mode="Markdown")
 
 @dp.message(F.text == "👤 Профиль")
-async def show_profile(message: types.Message, state: FSMContext):
+async def show_profile(message: types.Message):
     await safe_delete_message(message.chat.id, message.message_id)
-    data = await state.get_data()
-    if "last_msg_id" in data:
-        await safe_delete_message(message.chat.id, data["last_msg_id"])
-
     conn = sqlite3.connect("dotamozg.db")
     cursor = conn.cursor()
     cursor.execute("SELECT nickname, rank FROM users WHERE user_id = ?", (message.from_user.id,))
-    user_data = cursor.fetchone()
+    user = cursor.fetchone()
     conn.close()
 
-    if not user_data:
-        msg = await message.answer("Профиль не найден. Нажмите /start для регистрации.", reply_markup=main_menu())
-        await state.update_data(last_msg_id=msg.message_id)
+    if not user:
+        await message.answer("Сначала пройдите регистрацию через /start")
         return
 
-    nick, rank = user_data
-    profile_text = (
-        f"👤 **Ваш профиль**\n\n"
-        f"⚙️ **Никнейм:** {nick}\n"
-        f"🏆 **Текущий ранг:** {rank}"
-    )
+    text = f"👤 **Профиль пользователя**\n\nНикнейм: **{user[0]}**\nРанг: **{user[1]}**"
+    await message.answer(text, parse_mode="Markdown")
 
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="⚙️ Изменить ранг", callback_data="change_rank")]
-    ])
+async def handle_healthcheck(request):
+    return web.Response(text="OK")
 
-    msg = await message.answer(profile_text, parse_mode="Markdown", reply_markup=kb)
-    await state.update_data(last_msg_id=msg.message_id)
-
-@dp.callback_query(F.data == "change_rank")
-async def change_rank_prompt(callback: types.CallbackQuery, state: FSMContext):
-    ranks = ["Herald", "Guardian", "Crusader", "Archon", "Legend", "Ancient", "Divine", "Immortal"]
-    kb = []
-    for i in range(0, len(ranks), 2):
-        row = [InlineKeyboardButton(text=ranks[i], callback_data=f"rank_{ranks[i]}")]
-        if i + 1 < len(ranks):
-            row.append(InlineKeyboardButton(text=ranks[i+1], callback_data=f"rank_{ranks[i+1]}"))
-        kb.append(row)
-
-    await callback.message.edit_text("Выбери новый ранг для своего профиля:", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
-    await state.set_state(QuizStates.waiting_for_rank)
-
-# --- ДОБАВЛЕННЫЙ ВЕБ-СЕРВЕР ДЛЯ НЕПРЕРЫВНОЙ РАБОТЫ НА RENDER (FREE TIER) ---
-async def handle(request):
-    return web.Response(text="DotaMozg Bot is online 24/7!")
-
-async def start_website():
+async def main():
     app = web.Application()
-    app.router.add_get("/", handle)
+    app.router.add_get("/", handle_healthcheck)
     runner = web.AppRunner(app)
     await runner.setup()
     port = int(os.environ.get("PORT", 10000))
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
 
-async def main():
-    asyncio.create_task(start_website())
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
