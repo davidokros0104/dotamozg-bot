@@ -69,10 +69,16 @@ def category_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=kb)
 
 async def safe_delete_message(chat_id: int, message_id: int):
+    """Плавное удаление сообщений с эффектом задержки ⏳"""
     try:
+        await bot.edit_message_text(chat_id=chat_id, message_id=message_id, text="⏳")
+        await asyncio.sleep(0.2)
         await bot.delete_message(chat_id=chat_id, message_id=message_id)
     except Exception:
-        pass
+        try:
+            await bot.delete_message(chat_id=chat_id, message_id=message_id)
+        except Exception:
+            pass
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message, state: FSMContext):
@@ -88,18 +94,24 @@ async def cmd_start(message: types.Message, state: FSMContext):
         await state.update_data(last_msg_id=msg.message_id)
         await state.set_state(QuizStates.waiting_for_nickname)
     else:
-        await message.answer(f"С возвращением, {user[0]}!", reply_markup=main_menu())
+        msg = await message.answer(f"С возвращением, {user[0]}!", reply_markup=main_menu())
+        await state.update_data(last_msg_id=msg.message_id)
 
 @dp.message(Command("reset"))
 async def cmd_reset(message: types.Message, state: FSMContext):
     await safe_delete_message(message.chat.id, message.message_id)
+    data = await state.get_data()
+    if "last_msg_id" in data:
+        await safe_delete_message(message.chat.id, data["last_msg_id"])
+
     conn = sqlite3.connect("dotamozg.db")
     cursor = conn.cursor()
     cursor.execute("DELETE FROM users WHERE user_id = ?", (message.from_user.id,))
     conn.commit()
     conn.close()
     await state.clear()
-    await message.answer("🔄 Профиль очищен! Отправьте /start для регистрации.", reply_markup=main_menu())
+    msg = await message.answer("🔄 Профиль очищен! Отправьте /start для регистрации.", reply_markup=main_menu())
+    await state.update_data(last_msg_id=msg.message_id)
 
 @dp.message(QuizStates.waiting_for_nickname)
 async def process_nickname(message: types.Message, state: FSMContext):
@@ -138,8 +150,9 @@ async def process_rank(callback: types.CallbackQuery, state: FSMContext):
     conn.close()
 
     await safe_delete_message(callback.message.chat.id, callback.message.message_id)
-    await callback.message.answer(f"Профиль обновлен! Ваш ранг: **{selected_rank}**.", parse_mode="Markdown", reply_markup=main_menu())
+    msg = await callback.message.answer(f"Профиль обновлен! Ваш ранг: **{selected_rank}**.", parse_mode="Markdown", reply_markup=main_menu())
     await state.clear()
+    await state.update_data(last_msg_id=msg.message_id)
 
 @dp.message(F.text.in_(["📝 Пройти тест", "Играть", "играть"]))
 @dp.callback_query(F.data == "restart_quiz")
@@ -180,8 +193,17 @@ async def start_quiz_category(callback: types.CallbackQuery, state: FSMContext):
     if not pool:
         pool = QUESTIONS_BASE.copy()
 
-    random.shuffle(pool)
-    selected_questions = pool[:min(10, len(pool))]
+    # Фильтр от повторяющихся вопросов
+    unique_pool = []
+    seen_texts = set()
+    for q in pool:
+        q_text = q.get("question")
+        if q_text not in seen_texts:
+            seen_texts.add(q_text)
+            unique_pool.append(q)
+
+    random.shuffle(unique_pool)
+    selected_questions = unique_pool[:min(10, len(unique_pool))]
 
     await safe_delete_message(callback.message.chat.id, callback.message.message_id)
 
@@ -230,14 +252,15 @@ async def render_question(chat_id: int, state: FSMContext):
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=kb)
         )
-        await state.clear()
+        await state.update_data(last_msg_id=msg.message_id)
+        await state.set_state(None)
         return
 
     q = questions[index]
     text = f"❓ **Вопрос {index + 1}/{len(questions)}**\n\n{q['question']}"
     kb = []
     for idx, option in enumerate(q['options']):
-        kb.append([InlineKeyboardButton(text=option, callback_data=f"ans_{idx}")])
+        kb.append([InlineKeyboardButton(text=str(option), callback_data=f"ans_{idx}")])
 
     image_url = q.get("image") or BACKGROUND_IMAGES.get(q.get("category"), BACKGROUND_IMAGES["general"])
 
@@ -261,25 +284,51 @@ async def render_question(chat_id: int, state: FSMContext):
 
 @dp.callback_query(F.data.startswith("ans_"), QuizStates.in_quiz)
 async def process_answer(callback: types.CallbackQuery, state: FSMContext):
-    await callback.answer()
-    
     ans_idx = int(callback.data.split("_")[1])
     data = await state.get_data()
     questions = data["questions"]
     index = data["current_index"]
     q = questions[index]
 
-    if ans_idx == q["correct"]:
+    user_chosen_option = q["options"][ans_idx]
+
+    # Определение правильного индекса и текста
+    correct_target = q["correct"]
+    if isinstance(correct_target, int):
+        correct_idx = correct_target
+        correct_text = q["options"][correct_idx]
+    else:
+        correct_text = str(correct_target)
+        try:
+            correct_idx = [str(opt) for opt in q["options"]].index(correct_text)
+        except ValueError:
+            correct_idx = -1
+
+    is_correct = (ans_idx == correct_idx) or (str(user_chosen_option) == str(correct_text))
+
+    explanation = q.get("explanation", "")
+    exp_str = f"\n\n💡 {explanation}" if explanation else ""
+
+    if is_correct:
         await state.update_data(correct_count=data.get("correct_count", 0) + 1)
+        alert_msg = f"✅ Верно!{exp_str}"
     else:
         await state.update_data(wrong_count=data.get("wrong_count", 0) + 1)
+        alert_msg = f"❌ Неверно!\nПравильный ответ: {correct_text}{exp_str}"
+
+    # Всплывающее уведомление с результатом и пояснением
+    await callback.answer(text=alert_msg, show_alert=True)
 
     await state.update_data(current_index=index + 1)
     await render_question(callback.message.chat.id, state)
 
 @dp.message(F.text == "📊 Моя статистика")
-async def show_stats(message: types.Message):
+async def show_stats(message: types.Message, state: FSMContext):
     await safe_delete_message(message.chat.id, message.message_id)
+    data = await state.get_data()
+    if "last_msg_id" in data:
+        await safe_delete_message(message.chat.id, data["last_msg_id"])
+
     conn = sqlite3.connect("dotamozg.db")
     cursor = conn.cursor()
     cursor.execute("SELECT nickname, rank, total_questions, correct_answers, wrong_answers FROM users WHERE user_id = ?", (message.from_user.id,))
@@ -287,7 +336,8 @@ async def show_stats(message: types.Message):
     conn.close()
 
     if not user:
-        await message.answer("Сначала пройдите регистрацию через /start")
+        msg = await message.answer("Сначала пройдите регистрацию через /start")
+        await state.update_data(last_msg_id=msg.message_id)
         return
 
     nickname, rank, total, correct, wrong = user
@@ -301,11 +351,16 @@ async def show_stats(message: types.Message):
         f"❌ Ошибок: {wrong}\n"
         f"🎯 Точность: {winrate}%"
     )
-    await message.answer(text, parse_mode="Markdown")
+    msg = await message.answer(text, parse_mode="Markdown")
+    await state.update_data(last_msg_id=msg.message_id)
 
 @dp.message(F.text == "👤 Профиль")
-async def show_profile(message: types.Message):
+async def show_profile(message: types.Message, state: FSMContext):
     await safe_delete_message(message.chat.id, message.message_id)
+    data = await state.get_data()
+    if "last_msg_id" in data:
+        await safe_delete_message(message.chat.id, data["last_msg_id"])
+
     conn = sqlite3.connect("dotamozg.db")
     cursor = conn.cursor()
     cursor.execute("SELECT nickname, rank FROM users WHERE user_id = ?", (message.from_user.id,))
@@ -313,11 +368,13 @@ async def show_profile(message: types.Message):
     conn.close()
 
     if not user:
-        await message.answer("Сначала пройдите регистрацию через /start")
+        msg = await message.answer("Сначала пройдите регистрацию через /start")
+        await state.update_data(last_msg_id=msg.message_id)
         return
 
     text = f"👤 **Профиль пользователя**\n\nНикнейм: **{user[0]}**\nРанг: **{user[1]}**"
-    await message.answer(text, parse_mode="Markdown")
+    msg = await message.answer(text, parse_mode="Markdown")
+    await state.update_data(last_msg_id=msg.message_id)
 
 async def handle_healthcheck(request):
     return web.Response(text="OK")
@@ -335,3 +392,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
