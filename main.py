@@ -70,14 +70,9 @@ def category_keyboard():
 
 async def safe_delete_message(chat_id: int, message_id: int):
     try:
-        await bot.edit_message_text(chat_id=chat_id, message_id=message_id, text="⏳")
-        await asyncio.sleep(0.2)
         await bot.delete_message(chat_id=chat_id, message_id=message_id)
     except Exception:
-        try:
-            await bot.delete_message(chat_id=chat_id, message_id=message_id)
-        except Exception:
-            pass
+        pass
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message, state: FSMContext):
@@ -128,6 +123,7 @@ async def process_nickname(message: types.Message, state: FSMContext):
 
 @dp.callback_query(F.data.startswith("rank_"))
 async def process_rank(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer()
     selected_rank = callback.data.split("_")[1]
     data = await state.get_data()
     nickname = data.get("nickname") or callback.from_user.first_name or "Игрок"
@@ -148,8 +144,13 @@ async def process_rank(callback: types.CallbackQuery, state: FSMContext):
 @dp.message(F.text.in_(["📝 Пройти тест", "Играть", "играть"]))
 @dp.callback_query(F.data == "restart_quiz")
 async def ask_category(event: types.Message | types.CallbackQuery, state: FSMContext):
-    chat_id = event.chat.id if isinstance(event, types.Message) else event.message.chat.id
-    message_id = event.message_id if isinstance(event, types.Message) else event.message.message_id
+    if isinstance(event, types.CallbackQuery):
+        await event.answer()
+        chat_id = event.message.chat.id
+        message_id = event.message.message_id
+    else:
+        chat_id = event.chat.id
+        message_id = event.message_id
 
     await safe_delete_message(chat_id, message_id)
     data = await state.get_data()
@@ -162,6 +163,7 @@ async def ask_category(event: types.Message | types.CallbackQuery, state: FSMCon
 
 @dp.callback_query(F.data.startswith("cat_"), QuizStates.choosing_category)
 async def start_quiz_category(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer()
     cat = callback.data.replace("cat_", "")
 
     if cat == "all":
@@ -173,6 +175,9 @@ async def start_quiz_category(callback: types.CallbackQuery, state: FSMContext):
     elif cat == "lore":
         pool = [q for q in QUESTIONS_BASE if q.get("category") in ["lore", "general"]]
     else:
+        pool = QUESTIONS_BASE.copy()
+
+    if not pool:
         pool = QUESTIONS_BASE.copy()
 
     random.shuffle(pool)
@@ -234,11 +239,30 @@ async def render_question(chat_id: int, state: FSMContext):
     for idx, option in enumerate(q['options']):
         kb.append([InlineKeyboardButton(text=option, callback_data=f"ans_{idx}")])
 
-    msg = await bot.send_message(chat_id, text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    image_url = q.get("image") or BACKGROUND_IMAGES.get(q.get("category"), BACKGROUND_IMAGES["general"])
+
+    try:
+        msg = await bot.send_photo(
+            chat_id=chat_id,
+            photo=image_url,
+            caption=text,
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=kb)
+        )
+    except Exception:
+        msg = await bot.send_message(
+            chat_id=chat_id,
+            text=text,
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=kb)
+        )
+
     await state.update_data(last_msg_id=msg.message_id)
 
 @dp.callback_query(F.data.startswith("ans_"), QuizStates.in_quiz)
 async def process_answer(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer()
+    
     ans_idx = int(callback.data.split("_")[1])
     data = await state.get_data()
     questions = data["questions"]
@@ -246,12 +270,9 @@ async def process_answer(callback: types.CallbackQuery, state: FSMContext):
     q = questions[index]
 
     if ans_idx == q["correct"]:
-        await state.update_data(correct_count=data["correct_count"] + 1)
-        await callback.answer("✅ Правильно!", show_alert=False)
+        await state.update_data(correct_count=data.get("correct_count", 0) + 1)
     else:
-        await state.update_data(wrong_count=data["wrong_count"] + 1)
-        correct_text = q['options'][q['correct']]
-        await callback.answer(f"❌ Ошибка! Правильный ответ: {correct_text}", show_alert=True)
+        await state.update_data(wrong_count=data.get("wrong_count", 0) + 1)
 
     await state.update_data(current_index=index + 1)
     await render_question(callback.message.chat.id, state)
