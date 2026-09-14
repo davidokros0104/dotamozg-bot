@@ -41,6 +41,7 @@ init_db()
 class QuizStates(StatesGroup):
     waiting_for_nickname = State()
     waiting_for_rank = State()
+    editing_nickname = State()
     choosing_category = State()
     in_quiz = State()
 
@@ -69,8 +70,25 @@ def quiz_end_keyboard():
     ]
     return InlineKeyboardMarkup(inline_keyboard=kb)
 
+def profile_keyboard():
+    kb = [
+        [InlineKeyboardButton(text="✏️ Изменить ник", callback_data="edit_nickname"),
+         InlineKeyboardButton(text="🏅 Изменить ранг", callback_data="edit_rank")],
+        [InlineKeyboardButton(text="🏠 Главное меню", callback_data="go_main_menu")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=kb)
+
+def rank_selection_keyboard():
+    ranks = ["Herald", "Guardian", "Crusader", "Archon", "Legend", "Ancient", "Divine", "Immortal"]
+    kb = []
+    for i in range(0, len(ranks), 2):
+        row = [InlineKeyboardButton(text=ranks[i], callback_data=f"rank_{ranks[i]}")]
+        if i + 1 < len(ranks):
+            row.append(InlineKeyboardButton(text=ranks[i+1], callback_data=f"rank_{ranks[i+1]}"))
+        kb.append(row)
+    return InlineKeyboardMarkup(inline_keyboard=kb)
+
 async def safe_delete_message(chat_id: int, message_id: int):
-    """Плавное удаление сообщений"""
     try:
         await bot.edit_message_text(chat_id=chat_id, message_id=message_id, text="⏳")
         await asyncio.sleep(0.15)
@@ -122,15 +140,7 @@ async def process_nickname(message: types.Message, state: FSMContext):
     await safe_delete_message(message.chat.id, message.message_id)
 
     await state.update_data(nickname=message.text)
-    ranks = ["Herald", "Guardian", "Crusader", "Archon", "Legend", "Ancient", "Divine", "Immortal"]
-    kb = []
-    for i in range(0, len(ranks), 2):
-        row = [InlineKeyboardButton(text=ranks[i], callback_data=f"rank_{ranks[i]}")]
-        if i + 1 < len(ranks):
-            row.append(InlineKeyboardButton(text=ranks[i+1], callback_data=f"rank_{ranks[i+1]}"))
-        kb.append(row)
-
-    msg = await message.answer("Выбери твой текущий ранг в Dota 2:", reply_markup=InlineKeyboardMarkup(inline_keyboard=kb))
+    msg = await message.answer("Выбери твой текущий ранг в Dota 2:", reply_markup=rank_selection_keyboard())
     await state.update_data(last_msg_id=msg.message_id)
     await state.set_state(QuizStates.waiting_for_rank)
 
@@ -153,6 +163,39 @@ async def process_rank(callback: types.CallbackQuery, state: FSMContext):
     await safe_delete_message(callback.message.chat.id, callback.message.message_id)
     msg = await callback.message.answer(f"Профиль обновлен! Ваш ранг: **{selected_rank}**.", parse_mode="Markdown", reply_markup=main_menu())
     await state.clear()
+    await state.update_data(last_msg_id=msg.message_id)
+
+@dp.callback_query(F.data == "edit_nickname")
+async def start_edit_nickname(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer()
+    await safe_delete_message(callback.message.chat.id, callback.message.message_id)
+    msg = await callback.message.answer("Введите ваш новый никнейм:")
+    await state.update_data(last_msg_id=msg.message_id)
+    await state.set_state(QuizStates.editing_nickname)
+
+@dp.message(QuizStates.editing_nickname)
+async def process_new_nickname(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    if "last_msg_id" in data:
+        await safe_delete_message(message.chat.id, data["last_msg_id"])
+    await safe_delete_message(message.chat.id, message.message_id)
+
+    new_nickname = message.text
+    conn = sqlite3.connect("dotamozg.db")
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET nickname = ? WHERE user_id = ?", (new_nickname, message.from_user.id))
+    conn.commit()
+    conn.close()
+
+    msg = await message.answer(f"✅ Никнейм успешно изменен на **{new_nickname}**!", parse_mode="Markdown", reply_markup=main_menu())
+    await state.clear()
+    await state.update_data(last_msg_id=msg.message_id)
+
+@dp.callback_query(F.data == "edit_rank")
+async def start_edit_rank(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer()
+    await safe_delete_message(callback.message.chat.id, callback.message.message_id)
+    msg = await callback.message.answer("Выберите ваш новый ранг:", reply_markup=rank_selection_keyboard())
     await state.update_data(last_msg_id=msg.message_id)
 
 @dp.message(F.text.in_(["📝 Пройти тест", "Играть", "играть"]))
@@ -259,21 +302,36 @@ async def render_question(chat_id: int, state: FSMContext):
             parse_mode="Markdown",
             reply_markup=quiz_end_keyboard()
         )
-        await bot.send_message(chat_id, "Воспользуйтесь кнопками ниже для управления:", reply_markup=main_menu())
         
         await state.update_data(last_msg_id=msg.message_id)
         await state.set_state(None)
         return
 
     q = questions[index]
+
+    # Перемешиваем варианты ответов каждый раз
+    options = [str(opt) for opt in q['options']]
+    
+    correct_target = q["correct"]
+    if isinstance(correct_target, int):
+        correct_text = str(q["options"][correct_target])
+    else:
+        correct_text = str(correct_target)
+
+    shuffled_options = options.copy()
+    random.shuffle(shuffled_options)
+
+    # Запоминаем текущий список ответов и правильный текст в словаре вопроса сессии
+    q["shuffled_options"] = shuffled_options
+    q["correct_text"] = correct_text
+
     text = f"❓ **Вопрос {index + 1}/{len(questions)}**\n\n{q['question']}"
     kb = []
-    for idx, option in enumerate(q['options']):
-        kb.append([InlineKeyboardButton(text=str(option), callback_data=f"ans_{idx}")])
+    for idx, option in enumerate(shuffled_options):
+        kb.append([InlineKeyboardButton(text=option, callback_data=f"ans_{idx}")])
 
     image_url = q.get("image")
 
-    # Картинка отправляется ТОЛЬКО если она явно указана в самом вопросе
     if image_url:
         try:
             msg = await bot.send_photo(
@@ -298,7 +356,7 @@ async def render_question(chat_id: int, state: FSMContext):
             reply_markup=InlineKeyboardMarkup(inline_keyboard=kb)
         )
 
-    await state.update_data(last_msg_id=msg.message_id)
+    await state.update_data(last_msg_id=msg.message_id, questions=questions)
 
 @dp.callback_query(F.data.startswith("ans_"), QuizStates.in_quiz)
 async def process_answer(callback: types.CallbackQuery, state: FSMContext):
@@ -308,20 +366,11 @@ async def process_answer(callback: types.CallbackQuery, state: FSMContext):
     index = data["current_index"]
     q = questions[index]
 
-    user_chosen_option = q["options"][ans_idx]
+    shuffled_options = q.get("shuffled_options", q["options"])
+    user_chosen_option = str(shuffled_options[ans_idx])
+    correct_text = str(q.get("correct_text", q["correct"]))
 
-    correct_target = q["correct"]
-    if isinstance(correct_target, int):
-        correct_idx = correct_target
-        correct_text = q["options"][correct_idx]
-    else:
-        correct_text = str(correct_target)
-        try:
-            correct_idx = [str(opt) for opt in q["options"]].index(correct_text)
-        except ValueError:
-            correct_idx = -1
-
-    is_correct = (ans_idx == correct_idx) or (str(user_chosen_option) == str(correct_text))
+    is_correct = (user_chosen_option == correct_text)
 
     explanation = q.get("explanation", "")
     exp_str = f" ({explanation})" if explanation else ""
@@ -333,7 +382,6 @@ async def process_answer(callback: types.CallbackQuery, state: FSMContext):
         await state.update_data(wrong_count=data.get("wrong_count", 0) + 1)
         alert_msg = f"❌ Неверно! Ответ: {correct_text}{exp_str}"
 
-    # Отправка верхней плашки (show_alert=False)
     await callback.answer(text=alert_msg, show_alert=False)
 
     await state.update_data(current_index=index + 1)
@@ -390,7 +438,7 @@ async def show_profile(message: types.Message, state: FSMContext):
         return
 
     text = f"👤 **Профиль пользователя**\n\nНикнейм: **{user[0]}**\nРанг: **{user[1]}**"
-    msg = await message.answer(text, parse_mode="Markdown", reply_markup=main_menu())
+    msg = await message.answer(text, parse_mode="Markdown", reply_markup=profile_keyboard())
     await state.update_data(last_msg_id=msg.message_id)
 
 async def handle_healthcheck(request):
