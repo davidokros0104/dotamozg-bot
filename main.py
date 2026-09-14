@@ -20,13 +20,6 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 
-BACKGROUND_IMAGES = {
-    "items": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/black_king_bar.png",
-    "heroes": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/pudge.png",
-    "lore": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/blog/archive_header.jpg",
-    "general": "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/home/hero_trio.png"
-}
-
 def init_db():
     conn = sqlite3.connect("dotamozg.db")
     cursor = conn.cursor()
@@ -54,8 +47,7 @@ class QuizStates(StatesGroup):
 def main_menu():
     kb = [
         [KeyboardButton(text="📝 Пройти тест")],
-        [KeyboardButton(text="📊 Моя статистика")],
-        [KeyboardButton(text="👤 Профиль")]
+        [KeyboardButton(text="📊 Моя статистика"), KeyboardButton(text="👤 Профиль")]
     ]
     return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
 
@@ -64,15 +56,24 @@ def category_keyboard():
         [InlineKeyboardButton(text="🎯 Микс (Всё подряд)", callback_data="cat_all")],
         [InlineKeyboardButton(text="🗡 Предметы", callback_data="cat_items")],
         [InlineKeyboardButton(text="🦸 Герои и Механики", callback_data="cat_heroes")],
-        [InlineKeyboardButton(text="📜 Киберспорт и Лор", callback_data="cat_lore")]
+        [InlineKeyboardButton(text="📜 Киберспорт и Лор", callback_data="cat_lore")],
+        [InlineKeyboardButton(text="🏠 Главное меню", callback_data="go_main_menu")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=kb)
+
+def quiz_end_keyboard():
+    kb = [
+        [InlineKeyboardButton(text="🔄 Играть снова", callback_data="restart_quiz")],
+        [InlineKeyboardButton(text="📂 Выбрать категорию", callback_data="go_categories")],
+        [InlineKeyboardButton(text="🏠 Главное меню", callback_data="go_main_menu")]
     ]
     return InlineKeyboardMarkup(inline_keyboard=kb)
 
 async def safe_delete_message(chat_id: int, message_id: int):
-    """Плавное удаление сообщений с эффектом задержки ⏳"""
+    """Плавное удаление сообщений"""
     try:
         await bot.edit_message_text(chat_id=chat_id, message_id=message_id, text="⏳")
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(0.15)
         await bot.delete_message(chat_id=chat_id, message_id=message_id)
     except Exception:
         try:
@@ -155,7 +156,7 @@ async def process_rank(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(last_msg_id=msg.message_id)
 
 @dp.message(F.text.in_(["📝 Пройти тест", "Играть", "играть"]))
-@dp.callback_query(F.data == "restart_quiz")
+@dp.callback_query(F.data.in_(["restart_quiz", "go_categories"]))
 async def ask_category(event: types.Message | types.CallbackQuery, state: FSMContext):
     if isinstance(event, types.CallbackQuery):
         await event.answer()
@@ -173,6 +174,14 @@ async def ask_category(event: types.Message | types.CallbackQuery, state: FSMCon
     msg = await bot.send_message(chat_id, "Выбери режим тестирования:", reply_markup=category_keyboard())
     await state.update_data(last_msg_id=msg.message_id)
     await state.set_state(QuizStates.choosing_category)
+
+@dp.callback_query(F.data == "go_main_menu")
+async def back_to_main_menu(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer()
+    await safe_delete_message(callback.message.chat.id, callback.message.message_id)
+    msg = await callback.message.answer("Главное меню:", reply_markup=main_menu())
+    await state.update_data(last_msg_id=msg.message_id)
+    await state.set_state(None)
 
 @dp.callback_query(F.data.startswith("cat_"), QuizStates.choosing_category)
 async def start_quiz_category(callback: types.CallbackQuery, state: FSMContext):
@@ -193,7 +202,6 @@ async def start_quiz_category(callback: types.CallbackQuery, state: FSMContext):
     if not pool:
         pool = QUESTIONS_BASE.copy()
 
-    # Фильтр от повторяющихся вопросов
     unique_pool = []
     seen_texts = set()
     for q in pool:
@@ -242,7 +250,6 @@ async def render_question(chat_id: int, state: FSMContext):
         conn.commit()
         conn.close()
 
-        kb = [[InlineKeyboardButton(text="🔄 Играть снова", callback_data="restart_quiz")]]
         msg = await bot.send_message(
             chat_id,
             f"🎉 **Тест завершен!**\n\n"
@@ -250,8 +257,10 @@ async def render_question(chat_id: int, state: FSMContext):
             f"❌ Ошибок: {wrong}\n"
             f"📊 Итог: {correct}/{total}",
             parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=kb)
+            reply_markup=quiz_end_keyboard()
         )
+        await bot.send_message(chat_id, "Воспользуйтесь кнопками ниже для управления:", reply_markup=main_menu())
+        
         await state.update_data(last_msg_id=msg.message_id)
         await state.set_state(None)
         return
@@ -262,17 +271,26 @@ async def render_question(chat_id: int, state: FSMContext):
     for idx, option in enumerate(q['options']):
         kb.append([InlineKeyboardButton(text=str(option), callback_data=f"ans_{idx}")])
 
-    image_url = q.get("image") or BACKGROUND_IMAGES.get(q.get("category"), BACKGROUND_IMAGES["general"])
+    image_url = q.get("image")
 
-    try:
-        msg = await bot.send_photo(
-            chat_id=chat_id,
-            photo=image_url,
-            caption=text,
-            parse_mode="Markdown",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=kb)
-        )
-    except Exception:
+    # Картинка отправляется ТОЛЬКО если она явно указана в самом вопросе
+    if image_url:
+        try:
+            msg = await bot.send_photo(
+                chat_id=chat_id,
+                photo=image_url,
+                caption=text,
+                parse_mode="Markdown",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=kb)
+            )
+        except Exception:
+            msg = await bot.send_message(
+                chat_id=chat_id,
+                text=text,
+                parse_mode="Markdown",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=kb)
+            )
+    else:
         msg = await bot.send_message(
             chat_id=chat_id,
             text=text,
@@ -292,7 +310,6 @@ async def process_answer(callback: types.CallbackQuery, state: FSMContext):
 
     user_chosen_option = q["options"][ans_idx]
 
-    # Определение правильного индекса и текста
     correct_target = q["correct"]
     if isinstance(correct_target, int):
         correct_idx = correct_target
@@ -307,17 +324,17 @@ async def process_answer(callback: types.CallbackQuery, state: FSMContext):
     is_correct = (ans_idx == correct_idx) or (str(user_chosen_option) == str(correct_text))
 
     explanation = q.get("explanation", "")
-    exp_str = f"\n\n💡 {explanation}" if explanation else ""
+    exp_str = f" ({explanation})" if explanation else ""
 
     if is_correct:
         await state.update_data(correct_count=data.get("correct_count", 0) + 1)
         alert_msg = f"✅ Верно!{exp_str}"
     else:
         await state.update_data(wrong_count=data.get("wrong_count", 0) + 1)
-        alert_msg = f"❌ Неверно!\nПравильный ответ: {correct_text}{exp_str}"
+        alert_msg = f"❌ Неверно! Ответ: {correct_text}{exp_str}"
 
-    # Всплывающее уведомление с результатом и пояснением
-    await callback.answer(text=alert_msg, show_alert=True)
+    # Отправка верхней плашки (show_alert=False)
+    await callback.answer(text=alert_msg, show_alert=False)
 
     await state.update_data(current_index=index + 1)
     await render_question(callback.message.chat.id, state)
@@ -336,7 +353,7 @@ async def show_stats(message: types.Message, state: FSMContext):
     conn.close()
 
     if not user:
-        msg = await message.answer("Сначала пройдите регистрацию через /start")
+        msg = await message.answer("Сначала пройдите регистрацию через /start", reply_markup=main_menu())
         await state.update_data(last_msg_id=msg.message_id)
         return
 
@@ -351,7 +368,7 @@ async def show_stats(message: types.Message, state: FSMContext):
         f"❌ Ошибок: {wrong}\n"
         f"🎯 Точность: {winrate}%"
     )
-    msg = await message.answer(text, parse_mode="Markdown")
+    msg = await message.answer(text, parse_mode="Markdown", reply_markup=main_menu())
     await state.update_data(last_msg_id=msg.message_id)
 
 @dp.message(F.text == "👤 Профиль")
@@ -368,12 +385,12 @@ async def show_profile(message: types.Message, state: FSMContext):
     conn.close()
 
     if not user:
-        msg = await message.answer("Сначала пройдите регистрацию через /start")
+        msg = await message.answer("Сначала пройдите регистрацию через /start", reply_markup=main_menu())
         await state.update_data(last_msg_id=msg.message_id)
         return
 
     text = f"👤 **Профиль пользователя**\n\nНикнейм: **{user[0]}**\nРанг: **{user[1]}**"
-    msg = await message.answer(text, parse_mode="Markdown")
+    msg = await message.answer(text, parse_mode="Markdown", reply_markup=main_menu())
     await state.update_data(last_msg_id=msg.message_id)
 
 async def handle_healthcheck(request):
@@ -392,4 +409,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
